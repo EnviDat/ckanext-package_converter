@@ -33,17 +33,15 @@ ckanext-package_converter
 =============
 
 .. Put a description of your extension here:
-   What does it do? What features does it have?
-   Consider including some screenshots or embedding a video!
-
+This extension allows the export and import of CKAN packages to multiple formats.
+Formats supported: DataCite (XML)
 
 ------------
 Requirements
 ------------
 
-For example, you might want to mention here which versions of CKAN this
-extension works with.
-
+It assumes the usage of ckanext-scheming. It is also compatible with ckanext-repeating, ckanext-composite and ckanext-spatial.
+This extension has been developed for CKAN 2.5.2.
 
 ------------
 Installation
