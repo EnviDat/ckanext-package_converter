@@ -24,16 +24,15 @@ class PackageExportController(toolkit.BaseController):
         r.content_disposition = 'attachment; filename=package_export.xml'.format(
             package_id)
         r.content_type = 'application/xml'
-        converted_package = '<?xml version="1.0" encoding="utf-8"?> <resource><identifier identifierType="DOI">' + package_id  + '</identifier></resource>'
 
-#        try:
-#            datapackage_dict = toolkit.get_action(
-#                'package_show_as_datapackage')(
-#                context,
-#                {'id': package_id}
-#            )
-#        except toolkit.ObjectNotFound:
-#            toolkit.abort(404, 'Dataset not found')
+        try:
+            converted_package = toolkit.get_action(
+                'package_export')(
+                context,
+                {'id': package_id, 'format':format}
+            )
+        except toolkit.ObjectNotFound:
+            toolkit.abort(404, 'Dataset not found')
 
         return converted_package
 

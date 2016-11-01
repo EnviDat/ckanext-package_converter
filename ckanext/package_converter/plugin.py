@@ -1,6 +1,7 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
 
+import  ckanext.package_converter.logic
 
 class Package_ConverterPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
@@ -29,6 +30,6 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
 
     def get_actions(self):
         return {
-            #'package_create_from_datapackage':
-            #    ckanext.datapackager.logic.action.create.package_create_from_datapackage,
+            'package_export':
+                ckanext.package_converter.logic.package_export,
              }
