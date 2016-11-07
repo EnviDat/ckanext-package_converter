@@ -20,7 +20,7 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
     def before_map(self, map_):
         map_.connect(
             'package_export',
-            '/dataset/{package_id}/export/{format}.{extension}',
+            '/dataset/{package_id}/export/{file_format}.{extension}',
             controller='ckanext.package_converter.controller:PackageExportController',
             action = 'package_export'
         )
