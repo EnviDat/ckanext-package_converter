@@ -7,22 +7,21 @@ log = getLogger(__name__)
 
 class PackageExportController(toolkit.BaseController):
 
-    def package_export(self, package_id, format=None, extension=None):
+    def package_export(self, package_id, format='', extension='xml'):
         '''Return the given dataset as a converted file.
         '''
         log.debug('****************** PackageExportController *********')
         log.debug(package_id)
         log.debug(format)
         log.debug(extension)
-
+        
         context = {
             'model': model,
             'session': model.Session,
             'user': toolkit.c.user,
         }
         r = toolkit.response
-        r.content_disposition = 'attachment; filename=package_export.xml'.format(
-            package_id)
+        r.content_disposition = 'attachment; filename=' + package_id + '_' + format + '.' + extension
         r.content_type = 'application/xml'
 
         try:
