@@ -35,16 +35,83 @@ def package_export(context, data_dict):
 
 
 def _datacite_converter(dataset_dict):
-    datacite_dict = {'resource':{'identifier':dataset_dict.get('doi', ' '), '@identifierType':"DOI"}}
+    datacite_dict = {'resource':{'identifier':{"#text":dataset_dict.get('doi', ' '), '@identifierType':"DOI"}}}
+    datacite_dict['resource']["@xsi:schemaLocation"] = "http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd"
+    datacite_dict['resource']["@xmlns"]="http://datacite.org/schema/kernel-3"
+    datacite_dict['resource']["@xmlns:xsi"]="http://www.w3.org/2001/XMLSchema-instance"
 
     # Authors
-    pkg_authors = json.loads(dataset_dict.get("author", "[]"))
-    datacite_authors_list = []
+    try:
+        pkg_authors = json.loads(dataset_dict.get("author", "[]"))
+    except:
+        pkg_authors = []
+
+    dc_creators_list = []
     for author in pkg_authors:
-        datacite_authors_list += [{'creatorName':author.get('name', ''), 'affiliation':author.get('affiliation', '')}]
-    if datacite_authors_list:
-        datacite_dict['resource']['creators'] = {'creator': datacite_authors_list }
+        dc_creator ={}
+        if author.get('name', False):
+            dc_creator['creatorName'] = author.get('name', '')
+        if author.get('affiliation', False):
+            dc_creator['affiliation'] = author.get('affiliation', '')
+        if author.get('identifier', False):
+            dc_creator['nameIdentifier'] = {"#text":author.get('identifier', '')}
+        if author.get('identifier_scheme', False):
+            dc_creator['nameIdentifier']['@nameIdentifierScheme'] = author.get('identifier_scheme', '').upper()
+        if dc_creator:
+            dc_creators_list += [ dc_creator ]
+    if dc_creators_list:
+        datacite_dict['resource']['creators'] = {'creator': dc_creators_list }
+
+    # Title
+    dc_titles = []
+    if dataset_dict.get("title", ""):
+        dc_titles += [ {"#text": dataset_dict.get("title", "")} ]
+
+    title_type_dict = { "alternative_title":"AlternativeTitle", "subtitle":"Subtitle", "translated_title":"TranslatedTitle", "other":"Other" }
+    try:
+        pkg_subtitles = json.loads(dataset_dict.get("subtitle", "[]"))
+    except:
+        pkg_subtitles = []
+    for subtitle in pkg_subtitles:
+        dc_title = {}
+        if subtitle.get('subtitle', False):
+            dc_title['#text'] = subtitle.get('subtitle', '')
+        if subtitle.get('type', False):
+            dc_title['@titleType'] = title_type_dict.get(subtitle.get('type', ''), "Other")
+        if subtitle.get('language', False):
+            dc_title['@xml:lang'] = subtitle.get('language', '')
+        if dc_title:
+             dc_titles += [ dc_title ]
+    if dc_titles:
+        datacite_dict['resource']['titles'] = {'title': dc_titles }
+
+    # Description
+    if dataset_dict.get("notes", ""):
+        datacite_dict['resource']['descriptions'] = {'description': {"#text":dataset_dict.get("notes", " "), "@xml:lang":"en-us", "@descriptionType":"Abstract"}}
+
+    # Publisher & publication year
+    try:
+        pkg_publication = json.loads(dataset_dict.get("publication", "{}"))
+    except:
+        pkg_publication = {}
+    if  pkg_publication.get("publisher",""):
+        datacite_dict['resource']['publisher'] = {"#text": pkg_publication.get("publisher","")}
+    if  pkg_publication.get("publication_year",""):
+        datacite_dict['resource']['publicationYear'] = {"#text": pkg_publication.get("publication_year","")}
+
+    # ResourceType
+    resource_type_general_dict ={"audiovisual": "Audiovisual", "collection": "Collection", "dataset": "Dataset", "event": "Event", "image": "Image", 
+                                 "interactive_resource": "InteractiveResource", "model": "Model", "physical_object": "PhysicalObject", 
+                                 "service": "Service", "software": "Software", "sound": "Sound", "text": "Text", "workflow": "Workflow", "other": "Other"}
+    if dataset_dict.get("resource_type", ""):
+        resource_type_general = resource_type_general_dict.get(dataset_dict.get("resource_type_general", "other"), "Other")
+        datacite_dict['resource']['resourceType'] = {"#text": dataset_dict.get("resource_type",""), '@resourceTypeGeneral':resource_type_general}
+
+    # Converto to xml
     converted_package = unparse(datacite_dict)
-    print("\n ********** \n" + converted_package + "\n ********** \n")
+    print( "\n **********" )
+    print( repr(converted_package ))
+    print( "\n **********" )
+
     return converted_package
 
