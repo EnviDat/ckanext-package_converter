@@ -1,5 +1,7 @@
 import ckan.plugins.toolkit as toolkit
 from xmltodict import unparse
+from pylons import config
+
 import json
 
 @toolkit.side_effect_free
@@ -17,6 +19,7 @@ def package_export(context, data_dict):
     :returns: the package metadata
     :rtype: string
     '''
+    print (context)
     try:
         package_id = data_dict['id']
     except KeyError:
@@ -39,6 +42,13 @@ def _datacite_converter(dataset_dict):
     datacite_dict['resource']["@xsi:schemaLocation"] = "http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd"
     datacite_dict['resource']["@xmlns"]="http://datacite.org/schema/kernel-3"
     datacite_dict['resource']["@xmlns:xsi"]="http://www.w3.org/2001/XMLSchema-instance"
+
+    # Alternate Identifier (CKAN URL)
+    ckan_package_url = config.get('ckan.site_url',"") + toolkit.url_for(controller='package', action='read', id=dataset_dict.get('name', ' '))
+    datacite_dict = {'resource':{'alternateIdentifiers':{'AlternateIdentifier':[{"#text":ckan_package_url, '@alternateIdentifierType':"URL"}]}}}
+    # legacy
+    if dataset_dict.get('url', ''):
+        datacite_dict['resource']['alternateIdentifiers']['AlternateIdentifier'] += [{"#text": dataset_dict.get('url', ''), '@alternateIdentifierType':"URL"}]
 
     # Authors
     try:
@@ -107,6 +117,82 @@ def _datacite_converter(dataset_dict):
         resource_type_general = resource_type_general_dict.get(dataset_dict.get("resource_type_general", "other"), "Other")
         datacite_dict['resource']['resourceType'] = {"#text": dataset_dict.get("resource_type",""), '@resourceTypeGeneral':resource_type_general}
 
+    # Contributor (contact person)
+    try:
+        pkg_contributor = json.loads(dataset_dict.get("maintainer", "{}"))
+    except:
+        pkg_contributor = {}
+    if pkg_contributor:
+        dc_contributor ={}
+        if pkg_contributor.get('name', False):
+            dc_contributor['contributorName'] = author.get('name', '')
+        if pkg_contributor.get('affiliation', False):
+            dc_contributor['affiliation'] = author.get('affiliation', '')
+        if pkg_contributor.get('identifier', False):
+            dc_contributor['nameIdentifier'] = {"#text":author.get('identifier', '')}
+        if pkg_contributor.get('identifier_scheme', False):
+            dc_contributor['nameIdentifier']['@nameIdentifierScheme'] = author.get('identifier_scheme', '').upper()
+        if dc_contributor:
+            dc_contributor['contributorType'] = 'ContactPerson'
+            datacite_dict['resource']['contributors'] = {'contributor': [dc_contributor] }
+    # Subject
+    dc_subjects = []
+    for tag in dataset_dict.get("tags", []):
+        tag_name = tag.get("display_name", tag.get("name",""))
+        dc_subjects += [{ "@xml:lang":"en-us", "#text":tag_name}]
+    if dc_subjects:
+        datacite_dict['resource']['subjects'] = {'subject':dc_subjects}
+
+    # Language
+    datacite_dict['resource']['language'] = dataset_dict.get("language", "en")
+
+    # License
+    if dataset_dict.get("license_title", ""):
+        datacite_dict['resource']['rightsList'] = {"rights":[{"#text": dataset_dict.get("license_title", "")}]}
+
+    # Version
+    if  dataset_dict.get("version", ""):
+        datacite_dict['resource']['version'] = dataset_dict.get("version", "")
+
+    # Formats
+    datacite_formats = []
+    for resource in dataset_dict.get("resources", []):
+        if resource.get("format", resource.get("mimetype", resource.get("mimetype_inner", ""))):
+            format = {"#text": resource.get("format", "")}
+            if format not in datacite_formats:
+                datacite_formats += [format]
+    if datacite_formats:
+         datacite_dict['resource']['formats'] = {'format': datacite_formats}
+
+    # Sizes
+    datacite_sizes = []
+    for resource in dataset_dict.get("resources", []):
+        if resource.get("size", ""):
+            datacite_sizes += [{"#text": resource.get("size", " ") + " bytes"}]
+    if datacite_sizes:
+         datacite_dict['resource']['sizes'] = {'size': datacite_sizes}
+
+
+    # GeoLocation
+    datacite_geolocation = {}
+    if  dataset_dict.get("spatial_info", ""):
+       datacite_geolocation["geoLocationPlace"] = dataset_dict.get("spatial_info", "")
+
+    try:
+        pkg_spatial = json.loads(dataset_dict.get("spatial", "{}"))
+    except:
+        pkg_spatial = {}
+    if pkg_spatial:
+       coordinates_list = _flatten_list( pkg_spatial.get("coordinates", "[]"))
+       coordinates = " ".join(coordinates_list)
+       if pkg_spatial.get("type", "").lower() == "polygon" :
+            datacite_geolocation["geoLocationBox"] = coordinates
+       else:
+            datacite_geolocation["geoLocationPoint"] = coordinates
+
+    if datacite_geolocation:
+       datacite_dict['resource']['geoLocations'] = {"geoLocation": [datacite_geolocation]}
+
     # Converto to xml
     converted_package = unparse(datacite_dict)
     print( "\n **********" )
@@ -114,4 +200,13 @@ def _datacite_converter(dataset_dict):
     print( "\n **********" )
 
     return converted_package
+
+def _flatten_list(input_list):
+    output_list = []
+    for item in input_list:
+        if type(item) is not list:
+            output_list += [str(item)]
+        else:
+            output_list += _flatten_list(item)
+    return output_list
 
