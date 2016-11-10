@@ -19,7 +19,6 @@ def package_export(context, data_dict):
     :returns: the package metadata
     :rtype: string
     '''
-    print (context)
     try:
         package_id = data_dict['id']
     except KeyError:
@@ -195,9 +194,6 @@ def _datacite_converter(dataset_dict):
 
     # Converto to xml
     converted_package = unparse(datacite_dict)
-    print( "\n **********" )
-    print( repr(converted_package ))
-    print( "\n **********" )
 
     return converted_package
 
