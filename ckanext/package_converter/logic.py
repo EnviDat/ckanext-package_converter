@@ -132,6 +132,23 @@ def _datacite_converter(dataset_dict):
             datacite_dict['resource']['contributors'] = {'contributor': [dc_contributor] }
 
     # Dates (TODO)
+    try:
+        pkg_dates = json.loads(dataset_dict.get("date", "[]"))
+    except:
+        pkg_dates = []
+    dates_list = []
+    for date in  pkg_dates:
+        dc_date = {}
+        if date.get('date', ""):
+            dc_date['#text'] = date.get('date', "")
+            if date.get('end_date', ""):
+                dc_date['#text'] += '/' + date.get('end_date', "")
+        if date.get('date_type', ""):
+            dc_date['@dateType'] = date.get('date_type', "").title()
+        if dc_date:
+            dates_list += [dc_date]
+    if dates_list:
+        datacite_dict['resource']['dates']={'date':dates_list}
 
     # Language
     datacite_dict['resource']['language'] = dataset_dict.get("language", "en")

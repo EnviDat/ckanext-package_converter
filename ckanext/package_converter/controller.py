@@ -10,11 +10,7 @@ class PackageExportController(toolkit.BaseController):
     def package_export(self, package_id, file_format='', extension='xml'):
         '''Return the given dataset as a converted file.
         '''
-        log.debug('****************** PackageExportController *********')
-        log.debug(package_id)
-        log.debug(file_format)
-        log.debug(extension)
- 
+
         context = {
             'model': model,
             'session': model.Session,
