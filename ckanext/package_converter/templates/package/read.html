@@ -1,0 +1,8 @@
+{% ckan_extends %}
+
+{% block package_description %}
+  {{ super() }}
+
+   <a href="{{ h.url_for('package_export', package_id=pkg.name, file_format='datacite', extension='xml')}}" class="btn"><i class="icon-file-text"></i>{{ _('Get DataCite XML')}}</a>
+
+{% endblock %}
