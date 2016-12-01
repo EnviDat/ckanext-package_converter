@@ -57,7 +57,7 @@ def _datacite_converter(dataset_dict):
 
     dc_creators_list = []
     for author in pkg_authors:
-        dc_creator ={}
+        dc_creator = collections.OrderedDict()
         if author.get('name', False):
             dc_creator['creatorName'] = author.get('name', '')
         if author.get('affiliation', False):
@@ -82,7 +82,7 @@ def _datacite_converter(dataset_dict):
     except:
         pkg_subtitles = []
     for subtitle in pkg_subtitles:
-        dc_title = {}
+        dc_title = collections.OrderedDict()
         if subtitle.get('subtitle', False):
             dc_title['#text'] = subtitle.get('subtitle', '')
         if subtitle.get('type', False):
@@ -118,7 +118,7 @@ def _datacite_converter(dataset_dict):
     except:
         pkg_contributor = {}
     if pkg_contributor:
-        dc_contributor ={}
+        dc_contributor = collections.OrderedDict()
         if pkg_contributor.get('name', False):
             dc_contributor['contributorName'] = author.get('name', '')
         if pkg_contributor.get('affiliation', False):
@@ -128,7 +128,7 @@ def _datacite_converter(dataset_dict):
         if pkg_contributor.get('identifier_scheme', False):
             dc_contributor['nameIdentifier']['@nameIdentifierScheme'] = author.get('identifier_scheme', '').upper()
         if dc_contributor:
-            dc_contributor['contributorType'] = 'ContactPerson'
+            dc_contributor['@contributorType'] = 'ContactPerson'
             datacite_dict['resource']['contributors'] = {'contributor': [dc_contributor] }
 
     # Dates (TODO)
@@ -138,7 +138,7 @@ def _datacite_converter(dataset_dict):
         pkg_dates = []
     dates_list = []
     for date in  pkg_dates:
-        dc_date = {}
+        dc_date =  collections.OrderedDict()
         if date.get('date', ""):
             dc_date['#text'] = date.get('date', "")
             if date.get('end_date', ""):
@@ -166,7 +166,7 @@ def _datacite_converter(dataset_dict):
     datacite_dict['resource']['alternateIdentifiers']={'AlternateIdentifier':[{"#text":ckan_package_url, '@alternateIdentifierType':"URL"}]}
     # legacy
     if dataset_dict.get('url', ''):
-        datacite_dict['resource']['alternateIdentifiers']['AlternateIdentifier'] += [{"#text": dataset_dict.get('url', ''), '@alternateIdentifierType':"URL"}]
+        datacite_dict['resource']['alternateIdentifiers']['alternateIdentifier'] += [{"#text": dataset_dict.get('url', ''), '@alternateIdentifierType':"URL"}]
 
     # Related identifiers (TODO)
 
@@ -208,7 +208,7 @@ def _datacite_converter(dataset_dict):
     try:
         pkg_spatial = json.loads(dataset_dict.get("spatial", "{}"))
     except:
-        pkg_spatial = {}
+        pkg_spatial =  collections.OrderedDict()
     if pkg_spatial:
        coordinates_list = _flatten_list( pkg_spatial.get("coordinates", "[]"))
        coordinates = " ".join(coordinates_list)
