@@ -6,6 +6,9 @@ import collections
 
 import json
 
+from logging import getLogger
+log = getLogger(__name__)
+
 @toolkit.side_effect_free
 def package_export(context, data_dict):
     '''Return the given CKAN converted to a format.
@@ -201,22 +204,19 @@ def _datacite_converter(dataset_dict):
         datacite_dict['resource']['descriptions'] = {'description': {"#text":dataset_dict.get("notes", " "), "@xml:lang":"en-us", "@descriptionType":"Abstract"}}
 
     # GeoLocation
-    datacite_geolocation = {}
+    datacite_geolocation = collections.OrderedDict()
     if  dataset_dict.get("spatial_info", ""):
        datacite_geolocation["geoLocationPlace"] = dataset_dict.get("spatial_info", "")
-
     try:
         pkg_spatial = json.loads(dataset_dict.get("spatial", "{}"))
     except:
         pkg_spatial =  collections.OrderedDict()
     if pkg_spatial:
-       coordinates_list = _flatten_list( pkg_spatial.get("coordinates", "[]"))
-       coordinates = " ".join(coordinates_list)
+       coordinates_list = _flatten_list( pkg_spatial.get("coordinates", "[]"), reverse = True)
        if pkg_spatial.get("type", "").lower() == "polygon" :
-            datacite_geolocation["geoLocationBox"] = coordinates
+            datacite_geolocation["geoLocationBox"] = " ".join(coordinates_list[:2] +  coordinates_list[4:6])
        else:
-            datacite_geolocation["geoLocationPoint"] = coordinates
-
+            datacite_geolocation["geoLocationPoint"] = " ".join(coordinates_list[:2])
     if datacite_geolocation:
        datacite_dict['resource']['geoLocations'] = {"geoLocation": [datacite_geolocation]}
 
@@ -225,12 +225,15 @@ def _datacite_converter(dataset_dict):
 
     return converted_package
 
-def _flatten_list(input_list):
+def _flatten_list(input_list, reverse = False):
     output_list = []
     for item in input_list:
         if type(item) is not list:
-            output_list += [str(item)]
+            if reverse:
+                 output_list = [str(item)] + output_list
+            else:
+                 output_list += [str(item)]
         else:
-            output_list += _flatten_list(item)
+            output_list += _flatten_list(item, reverse)
     return output_list
 
