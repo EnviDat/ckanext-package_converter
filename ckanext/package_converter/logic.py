@@ -166,7 +166,7 @@ def _datacite_converter(dataset_dict):
 
     # Alternate Identifier (CKAN URL)
     ckan_package_url = config.get('ckan.site_url',"") + toolkit.url_for(controller='package', action='read', id=dataset_dict.get('name', ' '))
-    datacite_dict['resource']['alternateIdentifiers']={'AlternateIdentifier':[{"#text":ckan_package_url, '@alternateIdentifierType':"URL"}]}
+    datacite_dict['resource']['alternateIdentifiers']={'alternateIdentifier':[{"#text":ckan_package_url, '@alternateIdentifierType':"URL"}]}
     # legacy
     if dataset_dict.get('url', ''):
         datacite_dict['resource']['alternateIdentifiers']['alternateIdentifier'] += [{"#text": dataset_dict.get('url', ''), '@alternateIdentifierType':"URL"}]
