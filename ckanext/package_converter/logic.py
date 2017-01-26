@@ -67,8 +67,8 @@ def _datacite_converter(dataset_dict):
             dc_creator['affiliation'] = author.get('affiliation', '')
         if author.get('identifier', False):
             dc_creator['nameIdentifier'] = {"#text":author.get('identifier', '')}
-        if author.get('identifier_scheme', False):
-            dc_creator['nameIdentifier']['@nameIdentifierScheme'] = author.get('identifier_scheme', '').upper()
+            if author.get('identifier_scheme', False):
+                dc_creator['nameIdentifier']['@nameIdentifierScheme'] = author.get('identifier_scheme', '').upper()
         if dc_creator:
             dc_creators_list += [ dc_creator ]
     if dc_creators_list:
