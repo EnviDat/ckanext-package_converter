@@ -128,8 +128,8 @@ def _datacite_converter(dataset_dict):
             dc_contributor['affiliation'] = author.get('affiliation', '')
         if pkg_contributor.get('identifier', False):
             dc_contributor['nameIdentifier'] = {"#text":author.get('identifier', '')}
-        if pkg_contributor.get('identifier_scheme', False):
-            dc_contributor['nameIdentifier']['@nameIdentifierScheme'] = author.get('identifier_scheme', '').upper()
+            if pkg_contributor.get('identifier_scheme', False):
+                dc_contributor['nameIdentifier']['@nameIdentifierScheme'] = author.get('identifier_scheme', '').upper()
         if dc_contributor:
             dc_contributor['@contributorType'] = 'ContactPerson'
             datacite_dict['resource']['contributors'] = {'contributor': [dc_contributor] }
