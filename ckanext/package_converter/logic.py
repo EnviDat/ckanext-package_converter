@@ -123,13 +123,13 @@ def _datacite_converter(dataset_dict):
     if pkg_contributor:
         dc_contributor = collections.OrderedDict()
         if pkg_contributor.get('name', False):
-            dc_contributor['contributorName'] = author.get('name', '')
+            dc_contributor['contributorName'] = pkg_contributor.get('name', '')
         if pkg_contributor.get('affiliation', False):
-            dc_contributor['affiliation'] = author.get('affiliation', '')
+            dc_contributor['affiliation'] = pkg_contributor.get('affiliation', '')
         if pkg_contributor.get('identifier', False):
-            dc_contributor['nameIdentifier'] = {"#text":author.get('identifier', '')}
+            dc_contributor['nameIdentifier'] = {"#text":pkg_contributor.get('identifier', '')}
             if pkg_contributor.get('identifier_scheme', False):
-                dc_contributor['nameIdentifier']['@nameIdentifierScheme'] = author.get('identifier_scheme', '').upper()
+                dc_contributor['nameIdentifier']['@nameIdentifierScheme'] = pkg_contributor.get('identifier_scheme', '').upper()
         if dc_contributor:
             dc_contributor['@contributorType'] = 'ContactPerson'
             datacite_dict['resource']['contributors'] = {'contributor': [dc_contributor] }
