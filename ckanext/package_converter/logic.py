@@ -77,7 +77,7 @@ def _datacite_converter(dataset_dict):
     # Titles
     dc_titles = []
     if dataset_dict.get("title", ""):
-        dc_titles += [ {"#text": dataset_dict.get("title", "")} ]
+        dc_titles += [ {"#text": dataset_dict.get("title", ""), '@xml:lang': "en-us" } ]
 
     title_type_dict = { "alternative_title":"AlternativeTitle", "subtitle":"Subtitle", "translated_title":"TranslatedTitle", "other":"Other" }
     try:
@@ -134,7 +134,7 @@ def _datacite_converter(dataset_dict):
             dc_contributor['@contributorType'] = 'ContactPerson'
             datacite_dict['resource']['contributors'] = {'contributor': [dc_contributor] }
 
-    # Dates (TODO)
+    # Dates
     try:
         pkg_dates = json.loads(dataset_dict.get("date", "[]"))
     except:
@@ -154,7 +154,8 @@ def _datacite_converter(dataset_dict):
         datacite_dict['resource']['dates']={'date':dates_list}
 
     # Language
-    datacite_dict['resource']['language'] = dataset_dict.get("language", "en")
+    if dataset_dict.get("language", ""):
+        datacite_dict['resource']['language'] = dataset_dict.get("language", "en")
 
     # ResourceType
     resource_type_general_dict ={"audiovisual": "Audiovisual", "collection": "Collection", "dataset": "Dataset", "event": "Event", "image": "Image", 
