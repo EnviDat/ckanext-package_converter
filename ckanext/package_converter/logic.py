@@ -196,11 +196,11 @@ def _datacite_converter_schema(dataset_dict, metadata_map):
     ckan_creators = _get_complex_mapped_value(datacite_creators_tag, datacite_creator_tag, datacite_creator_subfields, dataset_dict, metadata_map)
     for ckan_creator in ckan_creators:
         datacite_creator = collections.OrderedDict()
-        datacite_creator['creatorName'] = ckan_creator.get(datacite_creator_tag + '.' + 'creatorName', '')
-        if ckan_creator.get(datacite_creator_tag + '.' + 'nameIdentifier', False):
-            datacite_creator['nameIdentifier'] = { '#text': ckan_creator.get(datacite_creator_tag + '.' + 'nameIdentifier', ''),
-                                                   '@nameIdentifierScheme':  ckan_creator.get(datacite_creator_tag + '.' + 'nameIdentifier' + '.' + 'nameIdentifierScheme' , '').upper() }
-        datacite_creator['affiliation'] = ckan_creator.get(datacite_creator_tag + '.' + 'affiliation', '')
+        datacite_creator['creatorName'] = ckan_creator.get(_joinTags([datacite_creator_tag, 'creatorName']), '')
+        if ckan_creator.get(_joinTags([datacite_creator_tag, 'nameIdentifier']), False):
+            datacite_creator['nameIdentifier'] = { '#text': ckan_creator.get(_joinTags([datacite_creator_tag, 'nameIdentifier']), ''),
+                                                   '@nameIdentifierScheme':  ckan_creator.get(_joinTags([datacite_creator_tag, 'nameIdentifier', 'nameIdentifierScheme']), '').upper() }
+        datacite_creator['affiliation'] = ckan_creator.get(_joinTags([datacite_creator_tag, 'affiliation']), '')
         datacite_dict['resource'][datacite_creators_tag][datacite_creator_tag] += [ datacite_creator ]
 
     # Titles*
@@ -212,9 +212,9 @@ def _datacite_converter_schema(dataset_dict, metadata_map):
     ckan_titles = _get_complex_mapped_value(datacite_titles_tag, datacite_title_tag, ['', datacite_title_type_tag, datacite_xml_lang_tag], dataset_dict, metadata_map)
     for ckan_title in ckan_titles:
         datacite_title = {'#text': ckan_title.get( datacite_title_tag, ''),
-                          '@' + datacite_xml_lang_tag: ckan_title.get( '.'.join([datacite_title_tag, datacite_xml_lang_tag]) , 'en-us')}
-        if ckan_title.get( '.'.join([datacite_title_tag, datacite_title_type_tag]) ,''):
-            ckan_title_type =  ckan_title.get( '.'.join([datacite_title_tag, datacite_title_type_tag]) , 'other')
+                          '@' + datacite_xml_lang_tag: ckan_title.get( _joinTags([datacite_title_tag, datacite_xml_lang_tag]) , 'en-us')}
+        if ckan_title.get( _joinTags([datacite_title_tag, datacite_title_type_tag]) ,''):
+            ckan_title_type =  ckan_title.get( _joinTags([datacite_title_tag, datacite_title_type_tag]) , 'other')
             datacite_title['@' + datacite_title_type_tag] =  _valueToDataciteCV (ckan_title_type, datacite_title_type_tag)
         datacite_dict['resource'][datacite_titles_tag][datacite_title_tag] += [ datacite_title ]
 
@@ -236,10 +236,10 @@ def _datacite_converter_schema(dataset_dict, metadata_map):
     ckan_subjects = _get_complex_mapped_value(datacite_subjects_tag, datacite_subject_tag, [ '', datacite_xml_lang_tag ], dataset_dict, metadata_map)
     for ckan_subject in ckan_subjects:
         datacite_subject = {'#text': ckan_subject.get( datacite_subject_tag, ''),
-                          '@' + datacite_xml_lang_tag: ckan_subject.get( '.'.join([datacite_subject_tag, datacite_xml_lang_tag]) , 'en-us')}
+                          '@' + datacite_xml_lang_tag: ckan_subject.get( _joinTags([datacite_subject_tag, datacite_xml_lang_tag]) , 'en-us')}
         datacite_subjects += [ datacite_subject ]
     # Defined by autocomplete tags
-    if metadata_map.get(datacite_subjects_tag +'.' + datacite_subject_tag,{FIELD_NAME:''})[FIELD_NAME].find('tag')>=0:
+    if metadata_map.get(_joinTags([datacite_subjects_tag, datacite_subject_tag]),{FIELD_NAME:''})[FIELD_NAME].find('tag')>=0:
         for tag in dataset_dict.get('tags', []):
             tag_name = tag.get('display_name', tag.get('name',''))
             datacite_subjects += [{ '@' + datacite_xml_lang_tag:'en-us', '#text':tag_name}]
@@ -254,12 +254,12 @@ def _datacite_converter_schema(dataset_dict, metadata_map):
     ckan_contributors = _get_complex_mapped_value(datacite_contributors_tag, datacite_contributor_tag, datacite_contributor_subfields, dataset_dict, metadata_map)
     for ckan_contributor in ckan_contributors:
         datacite_contributor = collections.OrderedDict()
-        datacite_contributor['contributorName'] = ckan_contributor.get(datacite_contributor_tag + '.' + 'contributorName', '')
-        datacite_contributor['affiliation'] = ckan_contributor.get(datacite_contributor_tag + '.' + 'affiliation', '')
+        datacite_contributor['contributorName'] = ckan_contributor.get(_joinTags([datacite_contributor_tag, 'contributorName']), '')
+        datacite_contributor['affiliation'] = ckan_contributor.get(_joinTags([datacite_contributor_tag, 'affiliation']), '')
         if ckan_contributor.get(datacite_contributor_tag + '.' + 'nameIdentifier', False):
-            datacite_contributor['nameIdentifier'] = { '#text': ckan_contributor.get(datacite_contributor_tag + '.' + 'nameIdentifier', ''),
-                                                       '@nameIdentifierScheme':  ckan_contributor.get(datacite_contributor_tag + '.' + 'nameIdentifier' + '.' + 'nameIdentifierScheme' , '').upper() }
-        ckan_contributor_type = ckan_contributor.get(datacite_contributor_tag + '.' + 'contributorType', 'ContactPerson')
+            datacite_contributor['nameIdentifier'] = { '#text': ckan_contributor.get(_joinTags([datacite_contributor_tag, 'nameIdentifier']), ''),
+                                                       '@nameIdentifierScheme':  ckan_contributor.get(_joinTags([datacite_contributor_tag, 'nameIdentifier', 'nameIdentifierScheme']) , '').upper() }
+        ckan_contributor_type = ckan_contributor.get(datacite_contributor_tag, 'contributorType']), 'ContactPerson')
         datacite_contributor['@contributorType'] = _valueToDataciteCV (ckan_contributor_type, 'contributorType')
         datacite_contributors += [ datacite_contributor ]
 
@@ -274,7 +274,7 @@ def _datacite_converter_schema(dataset_dict, metadata_map):
     ckan_dates = _get_complex_mapped_value(datacite_dates_tag, datacite_date_tag, [ '', datacite_date_type_tag ], dataset_dict, metadata_map)
     for ckan_date in ckan_dates:
         datacite_date =  {'#text': ckan_date.get(datacite_date_tag, ''),
-                          '@' + datacite_date_type_tag: ckan_date.get(datacite_date_tag + '.' + datacite_date_type_tag, 'Valid').title()}
+                          '@' + datacite_date_type_tag: ckan_date.get(_joinTags([datacite_date_tag, datacite_date_type_tag]), 'Valid').title()}
         datacite_dates += [ datacite_date ]
     if datacite_dates:
         datacite_dict['resource'][datacite_dates_tag] = { datacite_date_tag: datacite_dates }
