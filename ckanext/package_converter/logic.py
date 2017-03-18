@@ -259,7 +259,7 @@ def _datacite_converter_schema(dataset_dict, metadata_map):
         if ckan_contributor.get(datacite_contributor_tag + '.' + 'nameIdentifier', False):
             datacite_contributor['nameIdentifier'] = { '#text': ckan_contributor.get(_joinTags([datacite_contributor_tag, 'nameIdentifier']), ''),
                                                        '@nameIdentifierScheme':  ckan_contributor.get(_joinTags([datacite_contributor_tag, 'nameIdentifier', 'nameIdentifierScheme']) , '').upper() }
-        ckan_contributor_type = ckan_contributor.get(datacite_contributor_tag, 'contributorType']), 'ContactPerson')
+        ckan_contributor_type = ckan_contributor.get(_joinTags([datacite_contributor_tag, 'contributorType']), 'ContactPerson')
         datacite_contributor['@contributorType'] = _valueToDataciteCV (ckan_contributor_type, 'contributorType')
         datacite_contributors += [ datacite_contributor ]
 
