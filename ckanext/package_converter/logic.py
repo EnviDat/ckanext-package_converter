@@ -10,6 +10,7 @@ import json
 from logging import getLogger
 
 from ckanext.scheming import helpers
+import ckan.model as model
 
 log = getLogger(__name__)
 
@@ -59,21 +60,24 @@ def package_export(context, data_dict):
 
 def _schema_map(format):
     schema = helpers.scheming_get_schema('dataset','dataset')
-    schema_map = {'format':format, 'metadata':{}}
-    for field in schema['dataset_fields']:
-        datacite_field = ''
-        if field.get('datacite', False):
-            datacite_field = field['datacite']
-            schema_map['metadata'][datacite_field] = {FIELD_NAME:field[FIELD_NAME], 'subfields':{}}
-        for subfield in field.get('subfields',[]):
-            if subfield.get('datacite', False):
-                datacite_subfield = subfield['datacite']
-                if datacite_field:
-                    schema_map['metadata'][datacite_field]['subfields'][datacite_subfield]= {FIELD_NAME:subfield[FIELD_NAME]}
-                else:
-                    schema_map['metadata'][datacite_subfield] = {FIELD_NAME:field[FIELD_NAME] + '.' + subfield[FIELD_NAME]}
-
+    schema_map = {'format':format, 'metadata':_map_fields(schema['dataset_fields'], format), 'metadata_resource': _map_fields(schema['resource_fields'], format)}
     return schema_map
+
+def _map_fields(schema, format):
+    map_dict = {}
+    for field in schema:
+        format_field = ''
+        if field.get(format, False):
+            format_field = field[format]
+            map_dict[format_field] = {FIELD_NAME:field[FIELD_NAME], 'subfields':{}}
+        for subfield in field.get('subfields',[]):
+            if subfield.get(format, False):
+                format_subfield = subfield[format]
+                if format_field:
+                    map_dict[format_field]['subfields'][format_subfield]= {FIELD_NAME:subfield[FIELD_NAME]}
+                else:
+                    map_dict[format_subfield] = {FIELD_NAME:field[FIELD_NAME] + '.' + subfield[FIELD_NAME]}
+    return map_dict
 
 def _get_single_mapped_value(format_tag, dataset_dict, metadata_map, default=''):
 
@@ -301,12 +305,40 @@ def _datacite_converter_schema(dataset_dict, metadata_map):
         datacite_dict['resource']['alternateIdentifiers']['alternateIdentifier'] += [{'#text': dataset_dict.get('url', ''), '@alternateIdentifierType':'URL'}]
 
     # Version
-#    if  dataset_dict.get('version', ''):
-#        datacite_dict['resource']['version'] = dataset_dict.get('version', '')
+    datacite_version_tag = 'version'
+    datacite_version = _get_single_mapped_value(datacite_version_tag, dataset_dict, metadata_map, '')
+    if datacite_version:
+        datacite_dict['resource'][datacite_version_tag] = {'#text': datacite_version }
 
     # Rights
-#    if dataset_dict.get('license_title', ''):
-#        datacite_dict['resource']['rightsList'] = {'rights':[{'#text': dataset_dict.get('license_title', '')}]}
+    datacite_rights_group_tag = 'rightsList'
+    datacite_rights_tag = 'rights'
+    datacite_rights_uri_tag = 'rightsURI'
+
+    datacite_rights = _get_complex_mapped_value(datacite_rights_group_tag, datacite_rights_tag, ['', datacite_rights_uri_tag], dataset_dict, metadata_map)
+
+    # Get details form License object 
+    if datacite_rights:
+        register = model.Package.get_license_register()
+        rights_list = []
+        for rights_item in datacite_rights:
+            rights_id = rights_item.get(datacite_rights_tag)
+            if rights_id:
+                 rights_title = rights_id
+                 rights_uri = rights_item.get( _joinTags([datacite_rights_tag, datacite_rights_uri_tag]), '')
+                 try:
+                     license = register.get(rights_id)
+                     rights_title = license.title
+                     rights_uri =  license.url
+                 except Exception:
+                     log.debug('Exception when trying to get license attributes')
+                     pass
+                 datacite_rights_item = { '#text': rights_title }
+                 if rights_uri:
+                     datacite_rights_item['@'+ datacite_rights_uri_tag] = rights_uri
+                 rights_list += [datacite_rights_item]
+        if rights_list:
+             datacite_dict['resource'][datacite_rights_group_tag] = {datacite_rights_tag: rights_list }
 
     # Description
     datacite_descriptions_tag = 'descriptions'
