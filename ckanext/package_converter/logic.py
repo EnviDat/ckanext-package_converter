@@ -50,7 +50,7 @@ def package_export(context, data_dict):
     converted_package = 'No converter available for format ' + file_format
 
     if (file_format=='datacite'):
-         schema_converted_package = _datacite_converter_schema(dataset_dict, metadata_map['metadata'])
+         schema_converted_package = _datacite_converter_schema(dataset_dict, metadata_map)
          log.debug(schema_converted_package)
 
          converted_package = _datacite_converter(dataset_dict)
@@ -158,7 +158,6 @@ def _get_complex_mapped_value(group_tag, element_tag, field_tags, dataset_dict, 
     return values_list
 
 def _valueToDataciteCV (value, datacite_tag, default=''):
-
     # Constant definitions
     datacite_cv = {}
     datacite_cv ['titleType'] = { 'alternativetitle':'AlternativeTitle', 'subtitle':'Subtitle', 'translatedtitle':'TranslatedTitle', 'other':'Other' }
@@ -178,7 +177,9 @@ def _valueToDataciteCV (value, datacite_tag, default=''):
 
     return (match_cv)
 
-def _datacite_converter_schema(dataset_dict, metadata_map):
+def _datacite_converter_schema(dataset_dict, metadata):
+    metadata_map = metadata['metadata']
+    metadata_resource_map = metadata['metadata_resource']
     datacite_dict = collections.OrderedDict()
 
     # Header
@@ -303,6 +304,30 @@ def _datacite_converter_schema(dataset_dict, metadata_map):
     # legacy
     if dataset_dict.get('url', ''):
         datacite_dict['resource']['alternateIdentifiers']['alternateIdentifier'] += [{'#text': dataset_dict.get('url', ''), '@alternateIdentifierType':'URL'}]
+
+    # Sizes (not defined in scheming, taken from default CKAN resource)
+    datacite_size_group_tag = 'sizes'
+    datacite_size_tag = 'size'
+    datacite_sizes = []
+    for resource in dataset_dict.get('resources', []):
+        if resource.get('size', ''):
+            datacite_sizes += [{'#text': resource.get('size', ' ') + ' bytes'}]
+    if datacite_sizes:
+         datacite_dict['resource'][datacite_size_group_tag] = {datacite_size_tag: datacite_sizes}
+
+    # Formats (get from resources)
+    datacite_format_group_tag = 'formats'
+    datacite_format_tag = 'format'
+    datacite_formats = []
+
+    for resource in dataset_dict.get('resources', []):
+      resource_format = _get_single_mapped_value( _joinTags([datacite_format_group_tag, datacite_format_tag]), dataset_dict, metadata_resource_map, default=resource.get('mimetype', resource.get('mimetype_inner', '')))
+      if resource_format:
+          datacite_format = {'#text': resource_format}
+          if datacite_format not in datacite_formats:
+              datacite_formats += [datacite_format]
+    if datacite_formats:
+        datacite_dict['resource'][datacite_format_group_tag] = {datacite_format_tag: datacite_formats}
 
     # Version
     datacite_version_tag = 'version'
