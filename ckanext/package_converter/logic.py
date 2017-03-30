@@ -211,7 +211,7 @@ def _datacite_converter_schema(dataset_dict, metadata):
     # Titles*
     datacite_titles_tag = 'titles'
     datacite_title_tag = 'title'
-    datacite_xml_lang_tag = 'xml:lang' 
+    datacite_xml_lang_tag = 'xml:lang'
     datacite_dict['resource'][datacite_titles_tag] = { datacite_title_tag: [ ] }
     datacite_title_type_tag = 'titleType'
     ckan_titles = _get_complex_mapped_value(datacite_titles_tag, datacite_title_tag, ['', datacite_title_type_tag, datacite_xml_lang_tag], dataset_dict, metadata_map)
@@ -378,6 +378,43 @@ def _datacite_converter_schema(dataset_dict, metadata):
         datacite_descriptions += [ datacite_description ]
     if datacite_descriptions:
         datacite_dict['resource'][datacite_descriptions_tag] = { datacite_description_tag: datacite_descriptions }
+
+    # GeoLocation
+    datacite_geolocations_tag = 'geoLocations'
+    datacite_geolocation_tag = 'geoLocation'
+    datacite_geolocation_place_tag = 'geoLocationPlace'
+    datacite_geolocation_point_tag = 'geoLocationPoint'
+    datacite_geolocation_box_tag = 'geoLocationBox'
+
+    ckan_geolocations = _get_complex_mapped_value(datacite_geolocations_tag, datacite_geolocation_tag, [ datacite_geolocation_place_tag, datacite_geolocation_point_tag, datacite_geolocation_box_tag ], dataset_dict, metadata_map)
+
+    datacite_geolocations = []
+    try:
+        # Spatial extension
+        pkg_spatial = json.loads(dataset_dict.get('spatial', '{}'))
+        if pkg_spatial:
+            datacite_geolocation = collections.OrderedDict()
+            coordinates_list = _flatten_list( pkg_spatial.get('coordinates', '[]'), reverse = True)
+            if pkg_spatial.get('type', '').lower() == 'polygon' :
+                datacite_geolocation['geoLocationBox'] = ' '.join(coordinates_list[:2] +  coordinates_list[4:6])
+            else:
+                datacite_geolocation['geoLocationPoint'] = ' '.join(coordinates_list[:2])
+            if ckan_geolocations:
+                datacite_geolocation_place = ckan_geolocations[0].get(_joinTags([datacite_geolocation_tag, datacite_geolocation_place_tag]), '')
+                if datacite_geolocation_place:
+                    datacite_geolocation[datacite_geolocation_place_tag] = datacite_geolocation_place
+            datacite_geolocations += [ datacite_geolocation ]
+    except:
+       # directly defined fields
+       for geolocation in ckan_geolocations:
+            datacite_geolocation = collections.OrderedDict()
+            datacite_geolocation_point[datacite_geolocation_point_tag] = geolocations.get(_joinTags([datacite_geolocation_point_tag]), '')
+            datacite_geolocation_box[datacite_geolocation_box_tag] = geolocations.get(_joinTags([datacite_geolocation_box_tag]), '')
+            datacite_geolocation[datacite_geolocation_place_tag] = geolocations.get(_joinTags([datacite_geolocation_tag, datacite_geolocation_place_tag]), '')
+            datacite_geolocations += [ datacite_geolocation ]
+
+    if datacite_geolocations:
+        datacite_dict['resource']['geoLocations'] = {'geoLocation': datacite_geolocations }
 
     # Convert to xml
     converted_package = unparse(datacite_dict)
