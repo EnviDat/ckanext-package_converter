@@ -12,6 +12,8 @@ from logging import getLogger
 from ckanext.scheming import helpers
 import ckan.model as model
 
+from ckanext.package_converter.model.metadata_format import MetadataFormats
+
 log = getLogger(__name__)
 
 

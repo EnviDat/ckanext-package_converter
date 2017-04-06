@@ -1,5 +1,5 @@
-from metadata_format import MetadataFormats, MetadataFormat, XMLMetadataFormat, FormatType
-from converter import Converters, XSLConverter
+from ckanext.package_converter.model.metadata_format import MetadataFormats, MetadataFormat, XMLMetadataFormat, FormatType
+from ckanext.package_converter.model.converter import Converters, XSLConverter
 
 # Add Formats
 MetadataFormats()._add_format(MetadataFormat('dcat', '20140116', format_type=FormatType.RDF, 
