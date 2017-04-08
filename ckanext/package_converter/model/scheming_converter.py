@@ -8,11 +8,11 @@ from ckanext.scheming import helpers
 FIELD_NAME = 'field_name'
 
 class SchemingConverter(BaseConverter):
-    
+
     def __init__(self, output_format):
         self.schema_map = self._schema_map(output_format.get_format_name)
         BaseConverter.__init__(self, output_format)
-        
+
     def _schema_map(format_name):
 
         def _map_fields(schema, format_name):
@@ -79,8 +79,8 @@ class SchemingConverter(BaseConverter):
         # Simple fields
         simple_fields_object = collections.OrderedDict()
         for field in field_tags:
-            simple_field_tag = _joinTags([element_tag, field])
-            group_field_tag = _joinTags([group_tag, simple_field_tag])
+            simple_field_tag = self._joinTags([element_tag, field])
+            group_field_tag = self._joinTags([group_tag, simple_field_tag])
 
             ckan_tag = metadata_map.get(group_field_tag, {FIELD_NAME:''})[ FIELD_NAME ]
             value = dataset_dict.get(ckan_tag, '')
@@ -103,7 +103,7 @@ class SchemingConverter(BaseConverter):
                 for ckan_element in json_field:
                     composite_object = collections.OrderedDict()
                     for field in field_tags:
-                        field_tag = _joinTags([element_tag, field])
+                        field_tag = self._joinTags([element_tag, field])
                         ckan_subfield_tag = ckan_subfields.get(field_tag, {FIELD_NAME:''})[FIELD_NAME]
                         subfield_value = ckan_element.get(ckan_subfield_tag, '')
                         if subfield_value:
@@ -116,7 +116,7 @@ class SchemingConverter(BaseConverter):
         return values_list
 
 class DataciteSchemingConverter(SchemingConverter):
-   
+
     def __init__(self):
         self.schema_map = self._schema_map(output_format.get_format_name)
         BaseConverter.__init__(self, output_format)

@@ -7,12 +7,13 @@ import collections
 
 import json
 
-from logging import getLogger
-
 from ckanext.scheming import helpers
 import ckan.model as model
 
 from ckanext.package_converter.model.metadata_format import MetadataFormats
+from ckanext.package_converter.model.converter import Converters
+
+from logging import getLogger
 
 log = getLogger(__name__)
 
@@ -29,7 +30,7 @@ def package_export(context, data_dict):
     :type id: string
     :format id: string
 
-    :param format: the format name
+    :param format: the output format name
     :type format: string
     :format format: string
 
@@ -44,19 +45,26 @@ def package_export(context, data_dict):
 
     dataset_dict = toolkit.get_action('package_show')(context,
                                                       {'id': package_id})
-    file_format = data_dict.get('format', '').lower()
+    output_format_name = data_dict.get('format', '').lower()
 
-    metadata_map = _schema_map(file_format)
-    log.debug( 'Metadata map:'+ repr(metadata_map))
+    # find output format object by name
+    matching_metadata_formats = MetadataFormats().get_metadata_formats(output_format_name)
+    log.debug('FORMATS matching "' + output_format_name + '": '+ repr(matching_metadata_formats))
+    if not matching_metadata_formats:
+        return ('Metadata format unknown {output_format_name}'.format(output_format_name=output_format_name))
+    output_format = matching_metadata_formats[0]
 
-    converted_package = 'No converter available for format ' + file_format
+    metadata_map = _schema_map(output_format_name)
+    #log.debug( 'Metadata map:'+ repr(metadata_map))
 
-    if (file_format=='datacite'):
+    converted_package = 'No converter available for format ' + output_format_name
+
+    if (output_format_name=='datacite'):
          schema_converted_package = _datacite_converter_schema(dataset_dict, metadata_map)
-         log.debug(schema_converted_package)
+         #log.debug(schema_converted_package)
 
-         converted_package = _datacite_converter(dataset_dict)
-         log.debug(converted_package)
+         #converted_package = _datacite_converter(dataset_dict)
+         #log.debug(converted_package)
 
     return schema_converted_package
 
