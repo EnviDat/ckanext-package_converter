@@ -1,5 +1,8 @@
 from ckanext.package_converter.model.metadata_format import MetadataFormats, MetadataFormat, XMLMetadataFormat, FormatType
 from ckanext.package_converter.model.converter import Converters, XSLConverter
+from ckanext.package_converter.model.scheming_converter import Datacite31SchemingConverter
+
+import os
 
 # Add Formats
 MetadataFormats()._add_format(MetadataFormat('dcat', '20140116', format_type=FormatType.RDF, 
@@ -17,9 +20,12 @@ MetadataFormats()._add_format(XMLMetadataFormat('oai_dc', '2.0', 'http://www.ope
                                    description='XML Schema adjusted for usage in the OAI-PMH that imports the Dublin Core elements from the DCMI schema.'))
 
 # Add Converters
-datacite_oai_dc_xsl_path = '../public/package_converter_xsl/datacite_v.3.1_to_oai_dc_v2.0.xsl'
+datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite_v.3.1_to_oai_dc_v2.0.xsl'
+datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_dc_xsl_relative_path)
 
 Converters().add_converter(XSLConverter(MetadataFormats().get_metadata_formats('datacite', '3.1')[0],
                       MetadataFormats().get_metadata_formats('oai_dc')[0],
                       datacite_oai_dc_xsl_path))
+
+Converters().add_converter(Datacite31SchemingConverter())
 

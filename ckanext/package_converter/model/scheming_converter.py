@@ -2,18 +2,32 @@ import ckanext
 
 from ckanext.package_converter.model.metadata_format import MetadataFormats
 from ckanext.package_converter.model.converter import BaseConverter
+from ckanext.package_converter.model.record import Record, JSONRecord, XMLRecord
 
 from ckanext.scheming import helpers
+import ckan.model as model
+import ckan.plugins.toolkit as toolkit
+
+import collections
+from pylons import config
+from xmltodict import unparse
+import sys
+
+from logging import getLogger
+log = getLogger(__name__)
+
 
 FIELD_NAME = 'field_name'
 
 class SchemingConverter(BaseConverter):
 
     def __init__(self, output_format):
-        self.schema_map = self._schema_map(output_format.get_format_name)
         BaseConverter.__init__(self, output_format)
 
-    def _schema_map(format_name):
+    def can_convert(self, record, check_version=False):
+        return (super(SchemingConverter, self).can_convert(record, check_version) and issubclass(type(record), JSONRecord))
+
+    def _get_schema_map(self, format_name):
 
         def _map_fields(schema, format_name):
             map_dict = {}
@@ -37,7 +51,7 @@ class SchemingConverter(BaseConverter):
                       'metadata_resource': _map_fields(schema['resource_fields'], format_name)}
         return schema_map
 
-    def get_single_mapped_value(format_tag, dataset_dict, metadata_map, default=''):
+    def _get_single_mapped_value(self, format_tag, dataset_dict, metadata_map, default=''):
 
         # standard field
         ckan_tag = metadata_map.get(format_tag, {FIELD_NAME:''})[FIELD_NAME]
@@ -57,7 +71,9 @@ class SchemingConverter(BaseConverter):
             field = ckan_tag.split('.', 1)[0]
             subfield = ckan_tag.split('.', 1)[1]
             try:
-                json_field = json.loads(dataset_dict[field])
+                json_field = dataset_dict[field]
+                if type(json_field) not in [list, dict]:
+                    json_field = json.loads(json_field)
                 if type(json_field) is list:
                     json_field = json_field[0]
                 value = json_field[subfield]
@@ -70,10 +86,10 @@ class SchemingConverter(BaseConverter):
 
         return (value)
 
-    def _joinTags(tag_list, sep='.'):
+    def _joinTags(self, tag_list, sep='.'):
         return (sep.join([tag for tag in tag_list if tag]))
 
-    def _get_complex_mapped_value(group_tag, element_tag, field_tags, dataset_dict, metadata_map):
+    def _get_complex_mapped_value(self, group_tag, element_tag, field_tags, dataset_dict, metadata_map):
         values_list = []
 
         # Simple fields
@@ -97,7 +113,9 @@ class SchemingConverter(BaseConverter):
 
         if dataset_dict.get(ckan_tag, ''):
             try:
-                json_field = json.loads(dataset_dict[ckan_tag])
+                json_field = dataset_dict[ckan_tag]
+                if type(json_field) not in [list, dict]:
+                    json_field = json.loads(json_field)
                 if type(json_field) is not list:
                     json_field = [json_field]
                 for ckan_element in json_field:
@@ -115,13 +133,26 @@ class SchemingConverter(BaseConverter):
 
         return values_list
 
-class DataciteSchemingConverter(SchemingConverter):
+class Datacite31SchemingConverter(SchemingConverter):
 
     def __init__(self):
-        self.schema_map = self._schema_map(output_format.get_format_name)
-        BaseConverter.__init__(self, output_format)
+        self.output_format = MetadataFormats().get_metadata_formats('datacite', '3.1')[0]
+        SchemingConverter.__init__(self, self.output_format)
 
-    def _valueToDataciteCV (value, datacite_tag, default=''):
+    def convert(self, record):
+        if self.can_convert(record):
+            dataset_dict = record.get_json_dict()
+            #log.debug('dataset_dict = ' + repr(dataset_dict))
+            converted_content = self._datacite_converter_schema(dataset_dict)
+            converted_record = Record(self.output_format, converted_content)
+            return XMLRecord.from_record(converted_record)
+        else:
+            raise TypeError(('Converter is not compatible with the record format {record_format}({record_version}). ' +
+                             'Accepted format is {input_format}({input_version}).').format(
+                                 record_format=record.get_metadata_format().get_format_name(), record_version=record.get_metadata_format().get_version(),
+                                 input_format=self.get_input_format().get_format_name(), input_version=self.input_format.get_version()))
+
+    def _valueToDataciteCV (self, value, datacite_tag, default=''):
         # Constant definitions
         datacite_cv = {}
         datacite_cv ['titleType'] = { 'alternativetitle':'AlternativeTitle', 'subtitle':'Subtitle', 'translatedtitle':'TranslatedTitle', 'other':'Other' }
@@ -141,9 +172,10 @@ class DataciteSchemingConverter(SchemingConverter):
 
         return (match_cv)
 
-    def _datacite_converter_schema(dataset_dict, metadata):
-        metadata_map = metadata['metadata']
-        metadata_resource_map = metadata['metadata_resource']
+    def _datacite_converter_schema(self, dataset_dict):
+        schema_map = self._get_schema_map(self.output_format.get_format_name())
+        metadata_map = schema_map['metadata']
+        metadata_resource_map = schema_map['metadata_resource']
         datacite_dict = collections.OrderedDict()
 
         # Header
@@ -154,7 +186,7 @@ class DataciteSchemingConverter(SchemingConverter):
 
         # Identifier*
         datacite_identifier_tag = 'identifier'
-        datacite_dict['resource'][datacite_identifier_tag] = {'#text': _get_single_mapped_value(datacite_identifier_tag, dataset_dict, metadata_map), '@identifierType':'DOI'}
+        datacite_dict['resource'][datacite_identifier_tag] = {'#text': self._get_single_mapped_value(datacite_identifier_tag, dataset_dict, metadata_map), '@identifierType':'DOI'}
 
         # Creators
         datacite_creators_tag = 'creators'
@@ -162,14 +194,14 @@ class DataciteSchemingConverter(SchemingConverter):
         datacite_creator_subfields = ['creatorName', 'affiliation', 'nameIdentifier', 'nameIdentifier.nameIdentifierScheme']
 
         datacite_dict['resource'][datacite_creators_tag] = { datacite_creator_tag: [ ] }
-        ckan_creators = _get_complex_mapped_value(datacite_creators_tag, datacite_creator_tag, datacite_creator_subfields, dataset_dict, metadata_map)
+        ckan_creators = self._get_complex_mapped_value(datacite_creators_tag, datacite_creator_tag, datacite_creator_subfields, dataset_dict, metadata_map)
         for ckan_creator in ckan_creators:
             datacite_creator = collections.OrderedDict()
-            datacite_creator['creatorName'] = ckan_creator.get(_joinTags([datacite_creator_tag, 'creatorName']), '')
-            if ckan_creator.get(_joinTags([datacite_creator_tag, 'nameIdentifier']), False):
-                datacite_creator['nameIdentifier'] = { '#text': ckan_creator.get(_joinTags([datacite_creator_tag, 'nameIdentifier']), ''),
-                                                       '@nameIdentifierScheme':  ckan_creator.get(_joinTags([datacite_creator_tag, 'nameIdentifier', 'nameIdentifierScheme']), '').upper() }
-            datacite_creator['affiliation'] = ckan_creator.get(_joinTags([datacite_creator_tag, 'affiliation']), '')
+            datacite_creator['creatorName'] = ckan_creator.get(self._joinTags([datacite_creator_tag, 'creatorName']), '')
+            if ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier']), False):
+                datacite_creator['nameIdentifier'] = { '#text': ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier']), ''),
+                                                       '@nameIdentifierScheme':  ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier', 'nameIdentifierScheme']), '').upper() }
+            datacite_creator['affiliation'] = ckan_creator.get(self._joinTags([datacite_creator_tag, 'affiliation']), '')
             datacite_dict['resource'][datacite_creators_tag][datacite_creator_tag] += [ datacite_creator ]
 
         # Titles*
@@ -178,37 +210,37 @@ class DataciteSchemingConverter(SchemingConverter):
         datacite_xml_lang_tag = 'xml:lang'
         datacite_dict['resource'][datacite_titles_tag] = { datacite_title_tag: [ ] }
         datacite_title_type_tag = 'titleType'
-        ckan_titles = _get_complex_mapped_value(datacite_titles_tag, datacite_title_tag, ['', datacite_title_type_tag, datacite_xml_lang_tag], dataset_dict, metadata_map)
+        ckan_titles = self._get_complex_mapped_value(datacite_titles_tag, datacite_title_tag, ['', datacite_title_type_tag, datacite_xml_lang_tag], dataset_dict, metadata_map)
         for ckan_title in ckan_titles:
             datacite_title = {'#text': ckan_title.get( datacite_title_tag, ''),
-                              '@' + datacite_xml_lang_tag: ckan_title.get( _joinTags([datacite_title_tag, datacite_xml_lang_tag]) , 'en-us')}
-            if ckan_title.get( _joinTags([datacite_title_tag, datacite_title_type_tag]) ,''):
-                ckan_title_type =  ckan_title.get( _joinTags([datacite_title_tag, datacite_title_type_tag]) , 'other')
+                              '@' + datacite_xml_lang_tag: ckan_title.get( self._joinTags([datacite_title_tag, datacite_xml_lang_tag]) , 'en-us')}
+            if ckan_title.get( self._joinTags([datacite_title_tag, datacite_title_type_tag]) ,''):
+                ckan_title_type =  ckan_title.get( self._joinTags([datacite_title_tag, datacite_title_type_tag]) , 'other')
                 datacite_title['@' + datacite_title_type_tag] =  _valueToDataciteCV (ckan_title_type, datacite_title_type_tag)
             datacite_dict['resource'][datacite_titles_tag][datacite_title_tag] += [ datacite_title ]
 
         # Publication year*
         datacite_publication_year_tag = 'publicationYear'
-        datacite_dict['resource'][datacite_publication_year_tag] = {'#text': _get_single_mapped_value(datacite_publication_year_tag, dataset_dict, metadata_map) }
+        datacite_dict['resource'][datacite_publication_year_tag] = {'#text': self._get_single_mapped_value(datacite_publication_year_tag, dataset_dict, metadata_map) }
 
         # Publisher
         datacite_publisher_tag = 'publisher'
-        publisher_value = _get_single_mapped_value(datacite_publisher_tag, dataset_dict, metadata_map)
+        publisher_value = self._get_single_mapped_value(datacite_publisher_tag, dataset_dict, metadata_map)
         if (publisher_value):
-            datacite_dict['resource'][datacite_publisher_tag] = {'#text': _get_single_mapped_value(datacite_publisher_tag, dataset_dict, metadata_map) }
+            datacite_dict['resource'][datacite_publisher_tag] = {'#text': publisher_value }
 
         # Subjects
         datacite_subjects_tag = 'subjects'
         datacite_subject_tag = 'subject'
         datacite_subjects = []
         # Defined by usual field
-        ckan_subjects = _get_complex_mapped_value(datacite_subjects_tag, datacite_subject_tag, [ '', datacite_xml_lang_tag ], dataset_dict, metadata_map)
+        ckan_subjects = self._get_complex_mapped_value(datacite_subjects_tag, datacite_subject_tag, [ '', datacite_xml_lang_tag ], dataset_dict, metadata_map)
         for ckan_subject in ckan_subjects:
             datacite_subject = {'#text': ckan_subject.get( datacite_subject_tag, ''),
-                              '@' + datacite_xml_lang_tag: ckan_subject.get( _joinTags([datacite_subject_tag, datacite_xml_lang_tag]) , 'en-us')}
+                              '@' + datacite_xml_lang_tag: ckan_subject.get( self._joinTags([datacite_subject_tag, datacite_xml_lang_tag]) , 'en-us')}
             datacite_subjects += [ datacite_subject ]
         # Defined by autocomplete tags
-        if metadata_map.get(_joinTags([datacite_subjects_tag, datacite_subject_tag]),{FIELD_NAME:''})[FIELD_NAME].find('tag')>=0:
+        if metadata_map.get(self._joinTags([datacite_subjects_tag, datacite_subject_tag]),{FIELD_NAME:''})[FIELD_NAME].find('tag')>=0:
             for tag in dataset_dict.get('tags', []):
                 tag_name = tag.get('display_name', tag.get('name',''))
                 datacite_subjects += [{ '@' + datacite_xml_lang_tag:'en-us', '#text':tag_name}]
@@ -220,16 +252,16 @@ class DataciteSchemingConverter(SchemingConverter):
         datacite_contributor_tag = 'contributor'
         datacite_contributor_subfields = ['contributorName', 'affiliation', 'contributorType', 'nameIdentifier', 'nameIdentifier.nameIdentifierScheme']
         datacite_contributors = []
-        ckan_contributors = _get_complex_mapped_value(datacite_contributors_tag, datacite_contributor_tag, datacite_contributor_subfields, dataset_dict, metadata_map)
+        ckan_contributors = self._get_complex_mapped_value(datacite_contributors_tag, datacite_contributor_tag, datacite_contributor_subfields, dataset_dict, metadata_map)
         for ckan_contributor in ckan_contributors:
             datacite_contributor = collections.OrderedDict()
-            datacite_contributor['contributorName'] = ckan_contributor.get(_joinTags([datacite_contributor_tag, 'contributorName']), '')
-            datacite_contributor['affiliation'] = ckan_contributor.get(_joinTags([datacite_contributor_tag, 'affiliation']), '')
+            datacite_contributor['contributorName'] = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'contributorName']), '')
+            datacite_contributor['affiliation'] = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'affiliation']), '')
             if ckan_contributor.get(datacite_contributor_tag + '.' + 'nameIdentifier', False):
-                datacite_contributor['nameIdentifier'] = { '#text': ckan_contributor.get(_joinTags([datacite_contributor_tag, 'nameIdentifier']), ''),
-                                                           '@nameIdentifierScheme':  ckan_contributor.get(_joinTags([datacite_contributor_tag, 'nameIdentifier', 'nameIdentifierScheme']) , '').upper() }
-            ckan_contributor_type = ckan_contributor.get(_joinTags([datacite_contributor_tag, 'contributorType']), 'ContactPerson')
-            datacite_contributor['@contributorType'] = _valueToDataciteCV (ckan_contributor_type, 'contributorType')
+                datacite_contributor['nameIdentifier'] = { '#text': ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'nameIdentifier']), ''),
+                                                           '@nameIdentifierScheme':  ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'nameIdentifier', 'nameIdentifierScheme']) , '').upper() }
+            ckan_contributor_type = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'contributorType']), 'ContactPerson')
+            datacite_contributor['@contributorType'] = self._valueToDataciteCV (ckan_contributor_type, 'contributorType')
             datacite_contributors += [ datacite_contributor ]
 
         if datacite_contributors:
@@ -240,25 +272,25 @@ class DataciteSchemingConverter(SchemingConverter):
         datacite_date_tag = 'date'
         datacite_date_type_tag = 'dateType'
         datacite_dates = []
-        ckan_dates = _get_complex_mapped_value(datacite_dates_tag, datacite_date_tag, [ '', datacite_date_type_tag ], dataset_dict, metadata_map)
+        ckan_dates = self._get_complex_mapped_value(datacite_dates_tag, datacite_date_tag, [ '', datacite_date_type_tag ], dataset_dict, metadata_map)
         for ckan_date in ckan_dates:
             datacite_date =  {'#text': ckan_date.get(datacite_date_tag, ''),
-                              '@' + datacite_date_type_tag: ckan_date.get(_joinTags([datacite_date_tag, datacite_date_type_tag]), 'Valid').title()}
+                              '@' + datacite_date_type_tag: ckan_date.get(self._joinTags([datacite_date_tag, datacite_date_type_tag]), 'Valid').title()}
             datacite_dates += [ datacite_date ]
         if datacite_dates:
             datacite_dict['resource'][datacite_dates_tag] = { datacite_date_tag: datacite_dates }
 
         # Language
         datacite_language_tag = 'language'
-        datacite_dict['resource'][datacite_language_tag] = {'#text': _get_single_mapped_value(datacite_language_tag, dataset_dict, metadata_map, 'en') }
+        datacite_dict['resource'][datacite_language_tag] = {'#text': self._get_single_mapped_value(datacite_language_tag, dataset_dict, metadata_map, 'en') }
 
         # ResourceType
         datacite_resource_type_tag = 'resourceType'
         datacite_resource_type_general_tag = 'resourceTypeGeneral'
-        ckan_resource_type = _get_complex_mapped_value('', datacite_resource_type_tag, [ '', datacite_resource_type_general_tag ], dataset_dict, metadata_map)
+        ckan_resource_type = self._get_complex_mapped_value('', datacite_resource_type_tag, [ '', datacite_resource_type_general_tag ], dataset_dict, metadata_map)
         if ckan_resource_type:
-             ckan_resource_type_general = ckan_resource_type[0].get(_joinTags([datacite_resource_type_tag, datacite_resource_type_general_tag]))
-             datacite_resource_type_general = _valueToDataciteCV(ckan_resource_type_general, datacite_resource_type_general_tag, default = 'Dataset')
+             ckan_resource_type_general = ckan_resource_type[0].get(self._joinTags([datacite_resource_type_tag, datacite_resource_type_general_tag]))
+             datacite_resource_type_general = self._valueToDataciteCV(ckan_resource_type_general, datacite_resource_type_general_tag, default = 'Dataset')
              datacite_dict['resource'][datacite_resource_type_tag] = { '#text': ckan_resource_type[0].get(datacite_resource_type_tag, ''),
                                                                        '@' + datacite_resource_type_general_tag: datacite_resource_type_general }
 
@@ -285,7 +317,9 @@ class DataciteSchemingConverter(SchemingConverter):
         datacite_formats = []
 
         for resource in dataset_dict.get('resources', []):
-          resource_format = _get_single_mapped_value( _joinTags([datacite_format_group_tag, datacite_format_tag]), dataset_dict, metadata_resource_map, default=resource.get('mimetype', resource.get('mimetype_inner', '')))
+          resource_format = self._get_single_mapped_value( self._joinTags([datacite_format_group_tag, datacite_format_tag]), 
+                                                           resource, metadata_resource_map, 
+                                                           default=resource.get('mimetype', resource.get('mimetype_inner', '')))
           if resource_format:
               datacite_format = {'#text': resource_format}
               if datacite_format not in datacite_formats:
@@ -295,7 +329,7 @@ class DataciteSchemingConverter(SchemingConverter):
 
         # Version
         datacite_version_tag = 'version'
-        datacite_version = _get_single_mapped_value(datacite_version_tag, dataset_dict, metadata_map, '')
+        datacite_version = self._get_single_mapped_value(datacite_version_tag, dataset_dict, metadata_map, '')
         if datacite_version:
             datacite_dict['resource'][datacite_version_tag] = {'#text': datacite_version }
 
@@ -304,7 +338,7 @@ class DataciteSchemingConverter(SchemingConverter):
         datacite_rights_tag = 'rights'
         datacite_rights_uri_tag = 'rightsURI'
 
-        datacite_rights = _get_complex_mapped_value(datacite_rights_group_tag, datacite_rights_tag, ['', datacite_rights_uri_tag], dataset_dict, metadata_map)
+        datacite_rights = self._get_complex_mapped_value(datacite_rights_group_tag, datacite_rights_tag, ['', datacite_rights_uri_tag], dataset_dict, metadata_map)
 
         # Get details form License object
         if datacite_rights:
@@ -314,7 +348,7 @@ class DataciteSchemingConverter(SchemingConverter):
                 rights_id = rights_item.get(datacite_rights_tag)
                 if rights_id:
                      rights_title = rights_id
-                     rights_uri = rights_item.get( _joinTags([datacite_rights_tag, datacite_rights_uri_tag]), '')
+                     rights_uri = rights_item.get( self._joinTags([datacite_rights_tag, datacite_rights_uri_tag]), '')
                      try:
                          license = register.get(rights_id)
                          rights_title = license.title
@@ -334,11 +368,11 @@ class DataciteSchemingConverter(SchemingConverter):
         datacite_description_tag = 'description'
         datacite_description_type_tag = 'descriptionType'
         datacite_descriptions = []
-        ckan_descriptions = _get_complex_mapped_value(datacite_descriptions_tag, datacite_description_tag, [ '', datacite_xml_lang_tag, datacite_description_type_tag], dataset_dict, metadata_map)
+        ckan_descriptions = self._get_complex_mapped_value(datacite_descriptions_tag, datacite_description_tag, [ '', datacite_xml_lang_tag, datacite_description_type_tag], dataset_dict, metadata_map)
         for ckan_description in ckan_descriptions:
             datacite_description = {'#text': ckan_description.get( datacite_description_tag, ''),
-                              '@' + datacite_description_type_tag: ckan_description.get( _joinTags([datacite_description_tag, datacite_description_type_tag]) , 'Abstract'),
-                              '@' + datacite_xml_lang_tag: ckan_description.get( _joinTags([datacite_description_tag, datacite_xml_lang_tag]) , 'en-us')}
+                              '@' + datacite_description_type_tag: ckan_description.get( self._joinTags([datacite_description_tag, datacite_description_type_tag]) , 'Abstract'),
+                              '@' + datacite_xml_lang_tag: ckan_description.get( self._joinTags([datacite_description_tag, datacite_xml_lang_tag]) , 'en-us')}
             datacite_descriptions += [ datacite_description ]
         if datacite_descriptions:
             datacite_dict['resource'][datacite_descriptions_tag] = { datacite_description_tag: datacite_descriptions }
@@ -350,7 +384,7 @@ class DataciteSchemingConverter(SchemingConverter):
         datacite_geolocation_point_tag = 'geoLocationPoint'
         datacite_geolocation_box_tag = 'geoLocationBox'
 
-        ckan_geolocations = _get_complex_mapped_value(datacite_geolocations_tag, datacite_geolocation_tag, [ datacite_geolocation_place_tag, datacite_geolocation_point_tag, datacite_geolocation_box_tag ], dataset_dict, metadata_map)
+        ckan_geolocations = self._get_complex_mapped_value(datacite_geolocations_tag, datacite_geolocation_tag, [ datacite_geolocation_place_tag, datacite_geolocation_point_tag, datacite_geolocation_box_tag ], dataset_dict, metadata_map)
 
         datacite_geolocations = []
         try:
@@ -358,13 +392,13 @@ class DataciteSchemingConverter(SchemingConverter):
             pkg_spatial = json.loads(dataset_dict.get('spatial', '{}'))
             if pkg_spatial:
                 datacite_geolocation = collections.OrderedDict()
-                coordinates_list = _flatten_list( pkg_spatial.get('coordinates', '[]'), reverse = True)
+                coordinates_list = self._flatten_list( pkg_spatial.get('coordinates', '[]'), reverse = True)
                 if pkg_spatial.get('type', '').lower() == 'polygon' :
                     datacite_geolocation['geoLocationBox'] = ' '.join(coordinates_list[:2] +  coordinates_list[4:6])
                 else:
                     datacite_geolocation['geoLocationPoint'] = ' '.join(coordinates_list[:2])
                 if ckan_geolocations:
-                    datacite_geolocation_place = ckan_geolocations[0].get(_joinTags([datacite_geolocation_tag, datacite_geolocation_place_tag]), '')
+                    datacite_geolocation_place = ckan_geolocations[0].get(self._joinTags([datacite_geolocation_tag, datacite_geolocation_place_tag]), '')
                     if datacite_geolocation_place:
                         datacite_geolocation[datacite_geolocation_place_tag] = datacite_geolocation_place
                 datacite_geolocations += [ datacite_geolocation ]
@@ -372,9 +406,9 @@ class DataciteSchemingConverter(SchemingConverter):
            # directly defined fields
            for geolocation in ckan_geolocations:
                 datacite_geolocation = collections.OrderedDict()
-                datacite_geolocation_point[datacite_geolocation_point_tag] = geolocations.get(_joinTags([datacite_geolocation_point_tag]), '')
-                datacite_geolocation_box[datacite_geolocation_box_tag] = geolocations.get(_joinTags([datacite_geolocation_box_tag]), '')
-                datacite_geolocation[datacite_geolocation_place_tag] = geolocations.get(_joinTags([datacite_geolocation_tag, datacite_geolocation_place_tag]), '')
+                datacite_geolocation[datacite_geolocation_point_tag] = geolocation.get(self._joinTags([datacite_geolocation_point_tag]), '')
+                datacite_geolocation[datacite_geolocation_box_tag] = geolocation.get(self._joinTags([datacite_geolocation_box_tag]), '')
+                datacite_geolocation[datacite_geolocation_place_tag] = geolocation.get(self._joinTags([datacite_geolocation_tag, datacite_geolocation_place_tag]), '')
                 datacite_geolocations += [ datacite_geolocation ]
 
         if datacite_geolocations:
@@ -385,7 +419,7 @@ class DataciteSchemingConverter(SchemingConverter):
 
         return converted_package
 
-    def _flatten_list(input_list, reverse = False):
+    def _flatten_list(self, input_list, reverse = False):
         output_list = []
         for item in input_list:
             if type(item) is not list:
