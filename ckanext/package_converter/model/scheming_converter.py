@@ -12,6 +12,7 @@ import collections
 from pylons import config
 from xmltodict import unparse
 import sys
+import json
 
 from logging import getLogger
 log = getLogger(__name__)
@@ -73,7 +74,7 @@ class SchemingConverter(BaseConverter):
             try:
                 json_field = dataset_dict[field]
                 if type(json_field) not in [list, dict]:
-                    json_field = json.loads(json_field)
+                    json_field = json.loads(str(json_field))
                 if type(json_field) is list:
                     json_field = json_field[0]
                 value = json_field[subfield]
@@ -216,7 +217,7 @@ class Datacite31SchemingConverter(SchemingConverter):
                               '@' + datacite_xml_lang_tag: ckan_title.get( self._joinTags([datacite_title_tag, datacite_xml_lang_tag]) , 'en-us')}
             if ckan_title.get( self._joinTags([datacite_title_tag, datacite_title_type_tag]) ,''):
                 ckan_title_type =  ckan_title.get( self._joinTags([datacite_title_tag, datacite_title_type_tag]) , 'other')
-                datacite_title['@' + datacite_title_type_tag] =  _valueToDataciteCV (ckan_title_type, datacite_title_type_tag)
+                datacite_title['@' + datacite_title_type_tag] =  self._valueToDataciteCV (ckan_title_type, datacite_title_type_tag)
             datacite_dict['resource'][datacite_titles_tag][datacite_title_tag] += [ datacite_title ]
 
         # Publication year*
