@@ -429,5 +429,5 @@ class Datacite31SchemingConverter(SchemingConverter):
                 else:
                      output_list += [str(item)]
             else:
-                output_list += _flatten_list(item, reverse)
+                output_list += self._flatten_list(item, reverse)
         return output_list
