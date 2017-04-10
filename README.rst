@@ -33,14 +33,14 @@ ckanext-package_converter
 =============
 
 .. Put a description of your extension here:
-This extension allows the export and import of CKAN packages to multiple formats.
-Formats supported: DataCite (XML)
+This extension allows the export (and soon import) of CKAN package metadata to multiple formats.
+It allows the user to easily define custom converters and reuse existing ones.
+Formats supported: DataCite, OAI_DC,...
 
 ------------
 Requirements
 ------------
-
-It assumes the usage of ckanext-scheming. It is also compatible with ckanext-repeating, ckanext-composite and ckanext-spatial.
+It is compatible with ckanext-scheming, ckanext-repeating, ckanext-composite and ckanext-spatial.
 This extension has been developed for CKAN 2.5.2.
 
 ------------
@@ -74,11 +74,12 @@ To install ckanext-package_converter:
 Config Settings
 ---------------
 
-Document any optional config settings here. For example::
+You can define custom converters by adding them to the Converters() object directly or
+via the configuration file. For example::
 
-    # The minimum number of hours to wait before re-checking a resource
-    # (optional, default: 24).
-    ckanext.package_converter.some_setting = some_default_value
+    # full path to converters (optional)
+    package_converter.converters = ckanext.package_converter.model.scheming_converter.Datacite31SchemingConverter
+  
 
 
 ------------------------
