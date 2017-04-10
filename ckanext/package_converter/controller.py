@@ -18,7 +18,7 @@ class PackageExportController(toolkit.BaseController):
         }
         r = toolkit.response
         r.content_disposition = 'attachment; filename=' + package_id + '_' + file_format + '.' + extension
-        r.content_type = 'application/xml'
+        #r.content_type = 'application/xml'
 
         try:
             converted_package = toolkit.get_action(

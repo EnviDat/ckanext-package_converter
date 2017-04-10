@@ -4,6 +4,7 @@ class FormatType(Enum):
     XML = 'xml'
     JSON = 'json'
     TEXT = 'txt'
+    HTML = 'html'
     BINARY = 'bin'
     CSV = 'csv'
     RDF = 'rdf'
@@ -11,11 +12,12 @@ class FormatType(Enum):
 
 class MetadataFormat(object):
 
-    def __init__(self, format_name, version, format_type = FormatType.OTHER, file_extension='', description=''):
+    def __init__(self, format_name, version, format_type = FormatType.OTHER, file_extension='', mimetype='', description=''):
         self.format_name = format_name
         self.version = version
         self.format_type = format_type
         self.file_extension = file_extension or format_type.value
+        self.mimetype = mimetype or self._guess_mimetype(format_type)
         self.description = description
 
     def get_format_name(self):
@@ -30,6 +32,9 @@ class MetadataFormat(object):
     def get_file_extension(self):
         return self.file_extension
 
+    def get_mimetype(self):
+        return self.mimetype
+
     def get_description(self):
         return self.description
 
@@ -40,6 +45,21 @@ class MetadataFormat(object):
             return True
         return False
 
+    def _guess_mimetype(self, format_type):
+        if format_type ==  FormatType.XML:
+            return 'application/xml'
+        elif format_type == FormatType.JSON:
+            return 'application/json'
+        elif format_type == FormatType.TEXT:
+            return 'text/plain'
+        elif format_type == FormatType.HTML:
+            return 'text/html'
+        elif format_type == FormatType.BINARY:
+            return 'application/octet-stream'
+        elif format_type == FormatType.CSV:
+            return 'text/csv'
+        return 'application/octet-stream'
+
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.__dict__ == other.__dict__
@@ -48,17 +68,17 @@ class MetadataFormat(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-    
+
     def __repr__(self):
         return str(self)
-    
+
     def __str__(self):
-        return unicode(self).encode('utf-8') 
+        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        return ((u'MetadataFormat {format_name} v.{version}, {format_type} (.{file_extension}): {description}')
+        return ((u'MetadataFormat {format_name} v.{version}, {format_type}, {mimetype} (.{file_extension}): {description}')
                 .format(format_name=self.format_name, version=self.version, format_type=self.format_type.name,
-                        file_extension=self.file_extension, description=self.description))
+                        mimetype=self.mimetype, file_extension=self.file_extension, description=self.description))
 
 class XMLMetadataFormat(MetadataFormat):
 

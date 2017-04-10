@@ -17,11 +17,6 @@ from logging import getLogger
 
 log = getLogger(__name__)
 
-
-# CONSTANT TAGS (TODO: put in separate file)
-FIELD_NAME = 'field_name'
-
-
 @toolkit.side_effect_free
 def package_export(context, data_dict):
     '''Return the given CKAN converted to a format.
@@ -46,22 +41,26 @@ def package_export(context, data_dict):
     dataset_dict = toolkit.get_action('package_show')(context,
                                                       {'id': package_id})
     # find output format object by name
+    r = toolkit.response
+    r.content_type = 'text/html'
+
     output_format_name = data_dict.get('format', '').lower()
     matching_metadata_formats = MetadataFormats().get_metadata_formats(output_format_name)
-    log.debug('FORMATS matching "' + output_format_name + '": '+ repr(matching_metadata_formats))
     if not matching_metadata_formats:
         return ('Metadata format unknown {output_format_name}'.format(output_format_name=output_format_name))
     output_format = matching_metadata_formats[0]
+    r.content_type = output_format.get_mimetype()
 
     # get dataset as record
     ckan_format = MetadataFormats().get_metadata_formats('ckan')[0]
     dataset_record = JSONRecord(ckan_format, dataset_dict)
+
     # convert
-    #try:
-    converted_package_record = Converters().get_conversion(dataset_record, output_format)
-    converted_package_content = converted_package_record.get_content()
-    #except:
-    #     converted_package_content = 'No converter available for format ' + output_format_name
+    try:
+        converted_package_record = Converters().get_conversion(dataset_record, output_format)
+        converted_package_content = converted_package_record.get_content()
+    except:
+        converted_package_content = 'No converter available for format ' + output_format_name
 
     return converted_package_content
 
