@@ -112,7 +112,7 @@ class Converters(object):
             converter_class = getattr(module, class_name)
             converter = converter_class()
             if  issubclass(type(converter), Converter):
-                Converters().set_converter(converter)
+                Converters().add_converter(converter)
             else:
                 raise TypeError('Converter class {converter_class} is not a subclass of {standard_converter_class}.'.format(
                          converter_class=converter_class, standard_converter_class=Converter))
@@ -160,8 +160,8 @@ class Converters(object):
                         new_converter_chain = converter_chain + [converter]
                         if converter.can_convert_to_format(output_format, check_version=check_version): 
                             return new_converter_chain
-                    else:
-                        new_converter_chains += [new_converter_chain]
+                        else:
+                            new_converter_chains += [new_converter_chain]
                 converter_chains = new_converter_chains
             return []
         
@@ -181,7 +181,7 @@ class Converters(object):
             return unicode(self).encode('utf-8') 
 
         def __unicode__(self):
-            return (u'Converters ({num_converters}): {converters_dict}').converter(num_converters=self.get_num_converters(), converters_dict=self.converters_dict)
+            return (u'Converters ({num_converters}): {converters_dict}').format(num_converters=self.get_num_converters(), converters_dict=self.converters_dict)
 
     instance = None
     def __new__(cls): # __new__ always a classmethod

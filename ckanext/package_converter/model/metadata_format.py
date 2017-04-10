@@ -78,12 +78,15 @@ class MetadataFormats(object):
         def __init__(self):
             self.formats_dict = {}
 
-        def _add_format(self, metadata_format):
+        def add_metadata_format(self, metadata_format, replace=False):
             # TODO: Check duplicates 
             key = metadata_format.get_format_name()
             if not self.formats_dict.has_key(key):
                 self.formats_dict[key] = []
-            self.formats_dict[key]+= [metadata_format]
+            if replace:
+                self.formats_dict[key] = [metadata_format]
+            else:
+                self.formats_dict[key] = [metadata_format] + self.formats_dict[key]
 
         def get_num_formats(self):
             num = 0

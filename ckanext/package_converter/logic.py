@@ -45,7 +45,6 @@ def package_export(context, data_dict):
 
     dataset_dict = toolkit.get_action('package_show')(context,
                                                       {'id': package_id})
-        
     # find output format object by name
     output_format_name = data_dict.get('format', '').lower()
     matching_metadata_formats = MetadataFormats().get_metadata_formats(output_format_name)

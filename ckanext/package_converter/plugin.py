@@ -3,6 +3,13 @@ import ckan.plugins.toolkit as toolkit
 
 import  ckanext.package_converter.logic
 
+from ckanext.package_converter.model.converter import Converters
+
+from logging import getLogger
+log = getLogger(__name__)
+
+DEAFULT_BASE_CONVERTER = 'ckanext.package_converter.model.scheming_converter.Datacite31SchemingConverter'
+
 class Package_ConverterPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IActions)
@@ -14,6 +21,10 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
         toolkit.add_resource('fanstatic', 'package_converter')
+        # Add custom converters
+        custom_converters = config_.get('package_converter.converters', DEAFULT_BASE_CONVERTER).split()
+        for custom_converter in custom_converters:
+            Converters().add_converter_by_name(custom_converter)
 
     # IRoutes
 
@@ -33,3 +44,4 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
             'package_export':
                 ckanext.package_converter.logic.package_export,
              }
+
