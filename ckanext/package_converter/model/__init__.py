@@ -21,7 +21,14 @@ MetadataFormats().add_metadata_format(XMLMetadataFormat('oai_dc', '2.0', 'http:/
 # Add Converters
 datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite_v.3.1_to_oai_dc_v2.0.xsl'
 datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_dc_xsl_relative_path)
-
 Converters().add_converter(XSLConverter(MetadataFormats().get_metadata_formats('datacite', '3.1')[0],
                       MetadataFormats().get_metadata_formats('oai_dc')[0],
                       datacite_oai_dc_xsl_path))
+
+datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite-to-dcat-ap.xsl'
+datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_dc_xsl_relative_path)
+Converters().add_converter(XSLConverter(MetadataFormats().get_metadata_formats('datacite', '3.1')[0],
+                      MetadataFormats().get_metadata_formats('dcat')[0],
+                      datacite_oai_dc_xsl_path))
+
+

@@ -58,6 +58,8 @@ class MetadataFormat(object):
             return 'application/octet-stream'
         elif format_type == FormatType.CSV:
             return 'text/csv'
+        elif format_type == FormatType.RDF:
+            return 'application/xml'
         return 'application/octet-stream'
 
     def __eq__(self, other):
