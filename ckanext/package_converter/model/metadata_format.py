@@ -116,10 +116,10 @@ class MetadataFormats(object):
                 for metadata_format in self.formats_dict[key]:
                     num += 1
             return num
-        
-        def get_metadata_formats(self):
+
+        def get_metadata_formats_dict(self):
             return self.formats_dict
-        
+
         def get_metadata_formats(self, format_name, version=''):
             formats_matching_name = self.formats_dict.get(format_name, [])
             if not version:
@@ -129,10 +129,10 @@ class MetadataFormats(object):
                     if metadata_format.get_version() == version:
                         return [metadata_format]
             return []
-        
+
         def __repr__(self):
             return str(self)
-        
+
         def __str__(self):
             return unicode(self).encode('utf-8') 
 
