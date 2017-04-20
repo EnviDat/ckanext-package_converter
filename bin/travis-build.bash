@@ -36,5 +36,6 @@ pip install -e "git+https://github.com/ckan/ckanext-scheming.git#egg=ckanext-sch
 echo "Moving test.ini into a subdir..."
 mkdir subdir
 mv test.ini subdir
+mv test-travis.ini subdir
 
 echo "travis-build.bash is done."
