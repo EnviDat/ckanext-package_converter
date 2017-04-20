@@ -5,8 +5,8 @@
 .. image:: https://travis-ci.org/espona/ckanext-package_converter.svg?branch=master
     :target: https://travis-ci.org/espona/ckanext-package_converter
 
-.. image:: https://coveralls.io/repos/espona/ckanext-package_converter/badge.svg
-  :target: https://coveralls.io/r/espona/ckanext-package_converter
+.. image:: https://coveralls.io/repos/github/espona/ckanext-package_converter/badge.svg?branch=master
+    :target: https://coveralls.io/github/espona/ckanext-package_converter?branch=master
 
 .. image:: https://pypip.in/download/ckanext-package_converter/badge.svg
     :target: https://pypi.python.org/pypi//ckanext-package_converter/
