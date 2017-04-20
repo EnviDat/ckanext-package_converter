@@ -29,7 +29,8 @@ cd -
 
 echo "Installing ckanext-package_converter and its requirements..."
 python setup.py develop
-pip install -r dev-requirements.txt
+pip install -r requirements.txt  --allow-all-external
+pip install -r dev-requirements.txt  --allow-all-external
 
 echo "Moving test.ini into a subdir..."
 mkdir subdir
