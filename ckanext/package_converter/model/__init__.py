@@ -11,11 +11,13 @@ MetadataFormats().add_metadata_format(MetadataFormat('dcat', '20140116', format_
 MetadataFormats().add_metadata_format(MetadataFormat('ckan', '', format_type=FormatType.JSON, description='CKAN base format for package'))
 
 MetadataFormats().add_metadata_format(XMLMetadataFormat('datacite', '3.1', 'http://schema.datacite.org/meta/kernel-3/metadata.xsd',
+                                   namespace='http://datacite.org/schema/kernel-3/',
                                    description='DataCite Metadata Format'))
 #MetadataFormats().add_metadata_format(XMLMetadataFormat('datacite', '4.0', 'https://schema.datacite.org/meta/kernel-4.0/metadata.xsd',
 #                                   description='DataCite Metadata Format'))
 
 MetadataFormats().add_metadata_format(XMLMetadataFormat('oai_dc', '2.0', 'http://www.openarchives.org/OAI/2.0/oai_dc.xsd',
+                                   namespace='http://www.openarchives.org/OAI/2.0/oai_dc/',
                                    description='XML Schema adjusted for usage in the OAI-PMH that imports the Dublin Core elements from the DCMI schema.'))
 
 # Add Converters

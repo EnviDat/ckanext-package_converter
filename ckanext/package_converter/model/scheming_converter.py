@@ -416,7 +416,7 @@ class Datacite31SchemingConverter(SchemingConverter):
             datacite_dict['resource']['geoLocations'] = {'geoLocation': datacite_geolocations }
 
         # Convert to xml
-        converted_package = unparse(datacite_dict)
+        converted_package = unparse(datacite_dict, pretty=True)
 
         return converted_package
 

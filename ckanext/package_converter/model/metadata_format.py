@@ -84,15 +84,21 @@ class MetadataFormat(object):
 
 class XMLMetadataFormat(MetadataFormat):
 
-    def __init__(self, format_name, version, xsd_url, description=''):
+    def __init__(self, format_name, version, xsd_url, namespace, description=''):
         MetadataFormat.__init__(self, format_name, version, format_type=FormatType.XML, description=description)
         self.xsd_url = xsd_url
+        self.namespace = namespace
 
     def get_xsd_url(self):
         return self.xsd_url
 
+    def get_namespace(self):
+        return self.namespace
+
     def __unicode__(self):
-        return super(XMLMetadataFormat, self).__unicode__() + (u', xsd = {xsd}').format(xsd=self.xsd_url,)
+        return super(XMLMetadataFormat, self).__unicode__() + (
+                     u', xsd = {xsd}, namespace = {namespace}').format(
+                        xsd=self.xsd_url, namespace = self.namespace )
 
 class MetadataFormats(object):
     # Singleton
@@ -119,6 +125,13 @@ class MetadataFormats(object):
 
         def get_metadata_formats_dict(self):
             return self.formats_dict
+
+        def get_all_metadata_formats(self):
+            all_formats = []
+            for format_name in self.formats_dict:
+                for format_item in self.formats_dict[format_name]:
+                    all_formats += [format_item]
+            return all_formats
 
         def get_metadata_formats(self, format_name, version=''):
             formats_matching_name = self.formats_dict.get(format_name, [])
