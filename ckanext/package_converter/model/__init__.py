@@ -20,6 +20,9 @@ MetadataFormats().add_metadata_format(XMLMetadataFormat('oai_dc', '2.0', 'http:/
                                    namespace='http://www.openarchives.org/OAI/2.0/oai_dc/',
                                    description='XML Schema adjusted for usage in the OAI-PMH that imports the Dublin Core elements from the DCMI schema.'))
 
+MetadataFormats().add_metadata_format(XMLMetadataFormat('oai_pmh', '2.0', 'http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd',
+                                   namespace='http://www.openarchives.org/OAI/2.0/',
+                                   description='XML Schema which can be used to validate replies to all OAI-PMH v2.0 requests'))
 # Add Converters
 datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite_v.3.1_to_oai_dc_v2.0.xsl'
 datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_dc_xsl_relative_path)
