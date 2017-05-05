@@ -38,18 +38,28 @@ def package_export(context, data_dict):
     except KeyError:
         raise toolkit.ValidationError({'id': 'missing id'})
 
-    dataset_dict = toolkit.get_action('package_show')(context,
-                                                      {'id': package_id})
     # find output format object by name
     r = toolkit.response
     r.content_type = 'text/html'
 
     output_format_name = data_dict.get('format', '').lower()
+
+    converted_record = package_export_as_record(package_id, output_format_name, context)
+    try:
+        r.content_type = converted_record.get_metadata_format().get_mimetype()
+        converted_package_content = converted_record.get_content()
+        return(converted_package_content)
+    except:
+        return(str(converted_record))
+
+def package_export_as_record(package_id, output_format_name, context = {}):
+
+    dataset_dict = toolkit.get_action('package_show')(context,
+                                                      {'id': package_id})
     matching_metadata_formats = MetadataFormats().get_metadata_formats(output_format_name)
     if not matching_metadata_formats:
         return ('Metadata format unknown {output_format_name}'.format(output_format_name=output_format_name))
     output_format = matching_metadata_formats[0]
-    r.content_type = output_format.get_mimetype()
 
     # get dataset as record
     ckan_format = MetadataFormats().get_metadata_formats('ckan')[0]
@@ -57,11 +67,11 @@ def package_export(context, data_dict):
 
     # convert
     try:
-        converted_package_record = Converters().get_conversion(dataset_record, output_format)
-        converted_package_content = converted_package_record.get_content()
+        converted_record = Converters().get_conversion(dataset_record, output_format)
+        if converted_record:
+            return(converted_record)
+        else:
+            raise #Exception('Cannot convert')
     except:
-        converted_package_content = 'No converter available for format ' + output_format_name
-
-    return converted_package_content
-
+        return ('No converter available for format {0}'.format( output_format_name))
 

@@ -157,17 +157,20 @@ class Converters(object):
                     last_converter = converter_chain[-1]
                     next_converters = self.get_converters_for_format(last_converter.get_output_format(), check_version=check_version)
                     for converter in next_converters:
-                        new_converter_chain = converter_chain + [converter]
-                        if converter.can_convert_to_format(output_format, check_version=check_version): 
-                            return new_converter_chain
-                        else:
-                            new_converter_chains += [new_converter_chain]
+                        if converter not in converter_chain:
+                            new_converter_chain = converter_chain + [converter]
+                            if converter.can_convert_to_format(output_format, check_version=check_version): 
+                                return new_converter_chain
+                            else:
+                                new_converter_chains += [new_converter_chain]
                 converter_chains = new_converter_chains
             return []
         
         def get_conversion(self, record, output_format, check_version=False, limit=3):
             input_format = record.get_metadata_format()
             conversion_chain = self.find_conversion_chain(input_format, output_format, check_version=check_version, limit=limit)
+            if not conversion_chain:
+                return None
             latest_record = record
             for converter in conversion_chain:
                 converted_record = converter.convert(latest_record)
