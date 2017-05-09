@@ -58,16 +58,20 @@ class XMLRecord(Record):
         xml_dom = fromstring(self.content.encode(encoding), parser=parser)
         return(xml_dom)
 
-    def validate(self, encoding='utf-8'):
+    def validate(self, custom_xsd='', encoding='utf-8'):
         xml_dom = self._get_dom(encoding)
 
-        # encode xsd_url string if necessary
-        xsd_url_str = self.metadata_format.xsd_url
-        if isinstance(self.metadata_format.xsd_url, unicode):
-            xsd_url_str = self.metadata_format.xsd_url.encode(encoding)
-        # request XSD content
-        res = requests.get(xsd_url_str)
-        doc_xsd = etree.XML(res.content.replace('schemaLocation="include/',  'schemaLocation="' + xsd_url_str.rsplit("/", 1)[0] + '/include/'))
+        if custom_xsd:
+            xsd_content = custom_xsd
+        else:
+            # encode xsd_url string if necessary
+            xsd_url_str = self.metadata_format.xsd_url
+            if isinstance(self.metadata_format.xsd_url, unicode):
+                xsd_url_str = self.metadata_format.xsd_url.encode(encoding)
+            # request XSD content
+            res = requests.get(xsd_url_str)
+            xsd_content = res.content.replace('schemaLocation="include/',  'schemaLocation="' + xsd_url_str.rsplit("/", 1)[0] + '/include/')
+        doc_xsd = etree.XML(xsd_content)
         schema = etree.XMLSchema(doc_xsd)
 
         if (schema.validate(xml_dom)):
