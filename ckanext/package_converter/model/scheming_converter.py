@@ -181,8 +181,9 @@ class Datacite31SchemingConverter(SchemingConverter):
 
         # Header
         datacite_dict['resource']=collections.OrderedDict()
-        datacite_dict['resource']['@xsi:schemaLocation'] = 'http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd'
-        datacite_dict['resource']['@xmlns']='http://datacite.org/schema/kernel-3'
+        datacite_dict['resource']['@xsi:schemaLocation'] = '{namespace} {schema}'.format(namespace=self.output_format.get_namespace(), 
+                                                                                         schema=self.output_format.get_xsd_url())
+        datacite_dict['resource']['@xmlns']='{namespace}'.format(namespace=self.output_format.get_namespace())
         datacite_dict['resource']['@xmlns:xsi']='http://www.w3.org/2001/XMLSchema-instance'
 
         # Identifier*

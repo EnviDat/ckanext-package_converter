@@ -11,7 +11,7 @@ MetadataFormats().add_metadata_format(MetadataFormat('dcat', '20140116', format_
 MetadataFormats().add_metadata_format(MetadataFormat('ckan', '', format_type=FormatType.JSON, description='CKAN base format for package'))
 
 MetadataFormats().add_metadata_format(XMLMetadataFormat('datacite', '3.1', 'http://schema.datacite.org/meta/kernel-3/metadata.xsd',
-                                   namespace='http://datacite.org/schema/kernel-3/',
+                                   namespace='http://datacite.org/schema/kernel-3',
                                    description='DataCite Metadata Format'))
 #MetadataFormats().add_metadata_format(XMLMetadataFormat('datacite', '4.0', 'https://schema.datacite.org/meta/kernel-4.0/metadata.xsd',
 #                                   description='DataCite Metadata Format'))
