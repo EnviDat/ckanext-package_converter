@@ -74,11 +74,12 @@ class SchemingConverter(BaseConverter):
             try:
                 json_field = dataset_dict[field]
                 if type(json_field) not in [list, dict]:
-                    json_field = json.loads(str(json_field))
+                    json_field = json.loads(json_field)
                 if type(json_field) is list:
                     json_field = json_field[0]
                 value = json_field[subfield]
             except:
+                log.error("Unexpected error:", sys.exc_info()[0])
                 sys.exc_clear()
 
         if not value:
