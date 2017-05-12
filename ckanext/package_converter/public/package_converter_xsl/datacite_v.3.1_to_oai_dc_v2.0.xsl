@@ -159,11 +159,11 @@
 		</xsl:for-each>
 
 		<!-- 12. DESCRIPTION: 0-N -->
-<!-- 		<xsl:for-each select="d:descriptions/d:description">
+ 		<xsl:for-each select="d:descriptions/d:description">
 			<dc:description>
 				<xsl:value-of select="." />
 			</dc:description>
-		</xsl:for-each> -->
+		</xsl:for-each>
 
 		<!-- NOT MAPPED TO DATACITE BY ETHZ-DOI DESK -->
 		<!-- <dc:source></dc:source> -->
