@@ -27,7 +27,6 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
             Converters().add_converter_by_name(custom_converter)
 
     # IRoutes
-
     def before_map(self, map_):
         map_.connect(
             'package_export',
@@ -35,13 +34,21 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
             controller='ckanext.package_converter.controller:PackageExportController',
             action = 'package_export'
         )
+        map_.connect(
+            'resource_export',
+            '/dataset/{package_id}/resource/{resource_id}/export/{file_format}.{extension}',
+            controller='ckanext.package_converter.controller:PackageExportController',
+            action = 'resource_export'
+        )
         return map_
 
-    # IActions
 
+    # IActions
     def get_actions(self):
         return {
             'package_export':
                 ckanext.package_converter.logic.package_export,
+            'resource_export':
+                ckanext.package_converter.logic.resource_export,
              }
 

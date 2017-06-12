@@ -31,3 +31,27 @@ class PackageExportController(toolkit.BaseController):
 
         return converted_package
 
+    def resource_export(self, resource_id, file_format='', extension='xml'):
+        '''Return the given dataset as a converted file.
+        '''
+
+        context = {
+            'model': model,
+            'session': model.Session,
+            'user': toolkit.c.user,
+        }
+        r = toolkit.response
+        r.content_disposition = 'attachment; filename=' + resource_id + '_' + file_format + '.' + extension
+        #r.content_type = 'application/xml'
+
+        try:
+            converted_resource = toolkit.get_action(
+                'resource_export')(
+                context,
+                {'id': resource_id, 'format':file_format}
+            )
+        except toolkit.ObjectNotFound:
+            toolkit.abort(404, 'Dataset not found')
+
+        return converted_resource
+

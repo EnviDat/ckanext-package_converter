@@ -33,8 +33,31 @@ def package_export(context, data_dict):
     :rtype: string
     '''
 
+    return(_export(data_dict, context, type='package'))
+
+
+@toolkit.side_effect_free
+def resource_export(context, data_dict):
+    '''Return the given CKAN converted to a format.
+
+    :param id: the ID of the resource
+    :type id: string
+    :format id: string
+
+    :param format: the output format name
+    :type format: string
+    :format format: string
+
+    :returns: the package metadata
+    :rtype: string
+    '''
+
+    return(_export(data_dict, context, type='resource'))
+
+
+def _export(data_dict, context, type='package'):
     try:
-        package_id = data_dict['id']
+        id = data_dict['id']
     except KeyError:
         raise toolkit.ValidationError({'id': 'missing id'})
 
@@ -44,27 +67,38 @@ def package_export(context, data_dict):
 
     output_format_name = data_dict.get('format', '').lower()
 
-    converted_record = package_export_as_record(package_id, output_format_name, context)
+    converted_record = export_as_record(id, output_format_name, context, type)
     try:
         r.content_type = converted_record.get_metadata_format().get_mimetype()
-        converted_package_content = converted_record.get_content()
-        return(converted_package_content)
+        converted_content = converted_record.get_content()
+        return(converted_content)
     except:
         return(str(converted_record))
 
-def package_export_as_record(package_id, output_format_name, context = {}):
 
-    dataset_dict = toolkit.get_action('package_show')(context,
-                                                      {'id': package_id})
+def export_as_record(id, output_format_name, context = {}, type='package'):
+
+    # assuming type=package
+    action_show = 'package_show'
+    ckan_format_name = 'ckan'
+
+    if type=='resource':
+        action_show = 'resource_show'
+        ckan_format_name = 'ckan_resource'
+
+    dataset_dict = toolkit.get_action(action_show)(context,
+                                                      {'id': id})
     matching_metadata_formats = MetadataFormats().get_metadata_formats(output_format_name)
     if not matching_metadata_formats:
         return ('Metadata format unknown {output_format_name}'.format(output_format_name=output_format_name))
     output_format = matching_metadata_formats[0]
 
     # get dataset as record
-    ckan_format = MetadataFormats().get_metadata_formats('ckan')[0]
-    dataset_record = JSONRecord(ckan_format, dataset_dict)
-
+    try:
+        ckan_format = MetadataFormats().get_metadata_formats(ckan_format_name)[0]
+        dataset_record = JSONRecord(ckan_format, dataset_dict)
+    except:
+         return ('No converter available for input format {0}'.format(ckan_format_name))
     # convert
     try:
         converted_record = Converters().get_conversion(dataset_record, output_format)
@@ -73,5 +107,5 @@ def package_export_as_record(package_id, output_format_name, context = {}):
         else:
             raise #Exception('Cannot convert')
     except:
-        return ('No converter available for format {0}'.format( output_format_name))
+        return ('No converter available for format {0}'.format(output_format_name))
 
