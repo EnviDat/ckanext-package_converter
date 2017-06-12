@@ -9,6 +9,7 @@ MetadataFormats().add_metadata_format(MetadataFormat('dcat', '20140116', format_
                                             ' between data catalogs published on the Web ' +
                                             '(https://www.w3.org/TR/2014/REC-vocab-dcat-20140116)'))
 MetadataFormats().add_metadata_format(MetadataFormat('ckan', '', format_type=FormatType.JSON, description='CKAN base format for package'))
+MetadataFormats().add_metadata_format(MetadataFormat('ckan_resource', '', format_type=FormatType.JSON, description='CKAN base format for resources'))
 
 MetadataFormats().add_metadata_format(XMLMetadataFormat('datacite', '3.1', 'http://schema.datacite.org/meta/kernel-3/metadata.xsd',
                                    namespace='http://datacite.org/schema/kernel-3',
