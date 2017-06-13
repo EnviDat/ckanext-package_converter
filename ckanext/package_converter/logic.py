@@ -98,7 +98,7 @@ def export_as_record(id, output_format_name, context = {}, type='package'):
         ckan_format = MetadataFormats().get_metadata_formats(ckan_format_name)[0]
         dataset_record = JSONRecord(ckan_format, dataset_dict)
     except:
-         return ('No converter available for input format {0}'.format(ckan_format_name))
+         return ('Cannot create record in format {0}'.format(ckan_format_name))
     # convert
     try:
         converted_record = Converters().get_conversion(dataset_record, output_format)

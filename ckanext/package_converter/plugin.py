@@ -9,6 +9,7 @@ from logging import getLogger
 log = getLogger(__name__)
 
 DEAFULT_BASE_CONVERTER = 'ckanext.package_converter.model.scheming_converter.Datacite31SchemingConverter'
+DEAFULT_RESOURCE_BASE_CONVERTER = 'ckanext.package_converter.model.scheming_resource_converter.Datacite31SchemingResourceConverter'
 
 class Package_ConverterPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
@@ -23,6 +24,7 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
         toolkit.add_resource('fanstatic', 'package_converter')
         # Add custom converters
         custom_converters = config_.get('package_converter.converters', DEAFULT_BASE_CONVERTER).split()
+        custom_converters += config_.get('package_converter.resource_converters', DEAFULT_RESOURCE_BASE_CONVERTER).split()
         for custom_converter in custom_converters:
             Converters().add_converter_by_name(custom_converter)
 
