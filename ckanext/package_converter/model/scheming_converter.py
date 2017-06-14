@@ -433,3 +433,15 @@ class Datacite31SchemingConverter(SchemingConverter):
             else:
                 output_list += self._flatten_list(item, reverse)
         return output_list
+        
+    def flatten_list(self, input_list, reverse = False):
+        output_list = []
+        for item in input_list:
+            if type(item) is not list:
+                if reverse:
+                     output_list = [str(item)] + output_list
+                else:
+                     output_list += [str(item)]
+            else:
+                output_list += self._flatten_list(item, reverse)
+        return output_list
