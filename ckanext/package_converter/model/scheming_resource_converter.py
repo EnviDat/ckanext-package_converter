@@ -19,10 +19,6 @@ from logging import getLogger
 log = getLogger(__name__)
 
 
-FIELD_NAME = 'field_name'
-
-#      return (super(SchemingResourceConverter, self).can_convert(record, check_version) and issubclass(type(record), JSONRecord))
-
 class Datacite31SchemingResourceConverter(Datacite31SchemingConverter):
 
     def __init__(self):
@@ -37,11 +33,11 @@ class Datacite31SchemingResourceConverter(Datacite31SchemingConverter):
             datacite_dict = collections.OrderedDict()
             # Header
             datacite_dict['resource']=collections.OrderedDict()
-            datacite_dict['resource']['@xsi:schemaLocation'] = '{namespace} {schema}'.format(namespace=self.output_format.get_namespace(), 
+            datacite_dict['resource']['@xsi:schemaLocation'] = '{namespace} {schema}'.format(namespace=self.output_format.get_namespace(),
                                                                                              schema=self.output_format.get_xsd_url())
             datacite_dict['resource']['@xmlns']='{namespace}'.format(namespace=self.output_format.get_namespace())
             datacite_dict['resource']['@xmlns:xsi']='http://www.w3.org/2001/XMLSchema-instance'
-        
+
             # Identifier*
             datacite_identifier_tag = 'identifier'
             datacite_dict['resource'][datacite_identifier_tag] = {'#text': self._get_single_mapped_value(datacite_identifier_tag, resource_dict, metadata_resource_map), '@identifierType':'DOI'}
@@ -60,17 +56,19 @@ class Datacite31SchemingResourceConverter(Datacite31SchemingConverter):
                     ckan_title_type =  ckan_title.get( self._joinTags([datacite_title_tag, datacite_title_type_tag]) , 'other')
                     datacite_title['@' + datacite_title_type_tag] =  self._valueToDataciteCV (ckan_title_type, datacite_title_type_tag)
                 datacite_dict['resource'][datacite_titles_tag][datacite_title_tag] += [ datacite_title ]
-        
-            #Alternate Identifier (CKAN URL)? Decide which is landing page
-            #ckan_package_url = config.get('ckan.site_url','') + toolkit.url_for(controller='package', action='read', id=resource_dict.get('package_id', ''))
-            #datacite_dict['resource']['alternateIdentifiers']={'alternateIdentifier':[{'#text':ckan_package_url, '@alternateIdentifierType':'URL'}]}
+
+            # Alternate Identifier (CKAN URL) Decide which is landing page, resource or package
+            ckan_resource_url = config.get('ckan.site_url','') + toolkit.url_for(controller='package', action='resource_read',
+                                                                             id = resource_dict.get('package_id', ''),
+                                                                             resource_id = resource_dict.get('id', ''))
+            datacite_dict['resource']['alternateIdentifiers']={'alternateIdentifier':[{'#text':ckan_resource_url, '@alternateIdentifierType':'URL'}]}
 
             # Sizes (not defined in scheming, taken from default CKAN resource)
             datacite_size_group_tag = 'sizes'
             datacite_size_tag = 'size'
             datacite_sizes = []
             if resource_dict.get('size', ''):
-                datacite_sizes += [{'#text': resource.get('size', ' ') + ' bytes'}]
+                datacite_sizes += [{'#text': resource_dict.get('size', ' ') + ' bytes'}]
             if datacite_sizes:
                 datacite_dict['resource'][datacite_size_group_tag] = {datacite_size_tag: datacite_sizes}
 
@@ -79,7 +77,7 @@ class Datacite31SchemingResourceConverter(Datacite31SchemingConverter):
             datacite_format_tag = 'format'
             datacite_formats = []
 
-            resource_format = self._get_single_mapped_value( self._joinTags([datacite_format_group_tag, datacite_format_tag]), 
+            resource_format = self._get_single_mapped_value( self._joinTags([datacite_format_group_tag, datacite_format_tag]),
                                                            resource_dict, metadata_resource_map, 
                                                            default=resource_dict.get('mimetype', resource_dict.get('mimetype_inner', '')))
             if resource_format:
@@ -106,14 +104,15 @@ class Datacite31SchemingResourceConverter(Datacite31SchemingConverter):
                 datacite_descriptions += [ datacite_description ]
             if datacite_descriptions:
                 datacite_dict['resource'][datacite_descriptions_tag] = { datacite_description_tag: datacite_descriptions }
-            
+
             # inherit from package
             package_dict = resource_dict.get('package_dict')
+            log.debug('INHERIT package_dict = {0}'.format(package_dict))
             if package_dict:
                 log.debug('Inherit: convert package_dict from {0}'.format(package_dict.get('name', 'UNKNOWN')))
                 datacite_package_dict = parse(super(Datacite31SchemingResourceConverter, self)._datacite_converter_schema(package_dict))
                 datacite_dict['resource'] = self._inherit_from_package(datacite_dict['resource'], datacite_package_dict['resource'])
-            
+
             # Convert to xml
             converted_package = unparse(datacite_dict, pretty=True)
         except Exception as e:
@@ -121,7 +120,7 @@ class Datacite31SchemingResourceConverter(Datacite31SchemingConverter):
             log.debug(e)
             return None
         return converted_package
-    
+
     def _inherit_from_package(self, datacite_dict, datacite_package_dict):
         def merge_dict_lists(dict1, dict2):
             log.debug(' - merge {0} \n {1}'.format(dict1, dict2))
@@ -139,7 +138,7 @@ class Datacite31SchemingResourceConverter(Datacite31SchemingConverter):
                         if item not in list1:
                             dict1[key] += [item]
             return dict1
-             
+
         try:
             log.debug('_inherit_from_package')
             # values from the resource are added or replace the package
