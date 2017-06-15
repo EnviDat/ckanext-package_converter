@@ -79,15 +79,19 @@ def _export(data_dict, context, type='package'):
 def export_as_record(id, output_format_name, context = {}, type='package'):
 
     # assuming type=package
-    action_show = 'package_show'
     ckan_format_name = 'ckan'
 
     if type=='resource':
-        action_show = 'resource_show'
         ckan_format_name = 'ckan_resource'
-
-    dataset_dict = toolkit.get_action(action_show)(context,
-                                                      {'id': id})
+        dataset_dict = toolkit.get_action('resource_show')(context, {'id': id})
+        # include package data to inherit
+        package_id = dataset_dict.get('package_id')
+        if package_id:
+            package_dict = toolkit.get_action('package_show')(context, {'id': package_id})
+            dataset_dict['package_dict'] = package_dict
+    else:
+        dataset_dict = toolkit.get_action('package_show')(context, {'id': id})
+    
     matching_metadata_formats = MetadataFormats().get_metadata_formats(output_format_name)
     if not matching_metadata_formats:
         return ('Metadata format unknown {output_format_name}'.format(output_format_name=output_format_name))
