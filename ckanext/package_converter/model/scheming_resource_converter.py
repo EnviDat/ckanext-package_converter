@@ -107,51 +107,39 @@ class Datacite31SchemingResourceConverter(Datacite31SchemingConverter):
 
             # inherit from package
             package_dict = resource_dict.get('package_dict')
-            log.debug('INHERIT package_dict = {0}'.format(package_dict))
             if package_dict:
-                log.debug('Inherit: convert package_dict from {0}'.format(package_dict.get('name', 'UNKNOWN')))
                 datacite_package_dict = parse(super(Datacite31SchemingResourceConverter, self)._datacite_converter_schema(package_dict))
                 datacite_dict['resource'] = self._inherit_from_package(datacite_dict['resource'], datacite_package_dict['resource'])
 
             # Convert to xml
             converted_package = unparse(datacite_dict, pretty=True)
         except Exception as e:
-            log.debug('EXCEPTION')
-            log.debug(e)
+            log.exception(e)
             return None
         return converted_package
 
     def _inherit_from_package(self, datacite_dict, datacite_package_dict):
         def merge_dict_lists(dict1, dict2):
-            log.debug(' - merge {0} \n {1}'.format(dict1, dict2))
             for key in dict1.keys():
-                log.debug(' - key {0} is type {1}'.format(key, type(dict1[key])))
                 if type(dict1[key]) is list:
                     list1 = dict1[key]
-                    log.debug('dict2 is {0}'.format(dict2))
                     list2 = dict2.get(key, [])
                     if type(dict2.get(key, [])) is not list:
                         list2 = [list2]
-                    log.debug(' - merge list \n\t - {0} \n\t - ({2}) {1}'.format(list1, list2, type(list2)))
                     for item in list2:
-                        log.debug (item)
                         if item not in list1:
                             dict1[key] += [item]
             return dict1
 
         try:
-            log.debug('_inherit_from_package')
             # values from the resource are added or replace the package
-            replace = ['identifier', 'sizes', 'version', 'formats']
+            replace = ['identifier', 'sizes', 'version', 'formats', 'resourceType', 'alternateIdentifiers']
             for key in datacite_dict.keys():
                 if (key in replace) or (type(datacite_dict[key]) is not dict):
-                        log.debug('replacing {0}'.format(key))
                         datacite_package_dict[key] = datacite_dict[key]
                 else:
-                    log.debug('merging {0}'.format(key))
                     datacite_package_dict[key] = merge_dict_lists(datacite_dict[key], datacite_package_dict.get(key,{}))
             return (datacite_package_dict)
         except Exception as e:
-            log.debug('EXCEPTION')
-            log.error(e)
+            log.exception(e)
             return datacite_dict
