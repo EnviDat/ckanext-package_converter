@@ -17,7 +17,6 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IRoutes, inherit=True)
 
     # IConfigurer
-
     def update_config(self, config_):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
@@ -44,7 +43,6 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
         )
         return map_
 
-
     # IActions
     def get_actions(self):
         return {
@@ -53,4 +51,3 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
             'resource_export':
                 ckanext.package_converter.logic.resource_export,
              }
-
