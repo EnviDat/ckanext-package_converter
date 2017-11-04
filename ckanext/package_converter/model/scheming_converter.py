@@ -388,23 +388,35 @@ class Datacite31SchemingConverter(SchemingConverter):
         datacite_geolocation_box_tag = 'geoLocationBox'
 
         ckan_geolocations = self._get_complex_mapped_value(datacite_geolocations_tag, datacite_geolocation_tag, [ datacite_geolocation_place_tag, datacite_geolocation_point_tag, datacite_geolocation_box_tag ], dataset_dict, metadata_map)
-
+        log.debug("ckan_geolocations=" + str(ckan_geolocations))
         datacite_geolocations = []
         try:
             # Spatial extension
-            pkg_spatial = json.loads(dataset_dict.get('spatial', '{}'))
+            pkg_spatial = json.loads(dataset_dict['spatial'])
+            log.debug("pkg_spatial=" + str(pkg_spatial))
             if pkg_spatial:
-                datacite_geolocation = collections.OrderedDict()
                 coordinates_list = self._flatten_list( pkg_spatial.get('coordinates', '[]'), reverse = True)
                 if pkg_spatial.get('type', '').lower() == 'polygon' :
+                    datacite_geolocation = collections.OrderedDict()
                     datacite_geolocation['geoLocationBox'] = ' '.join(coordinates_list[:2] +  coordinates_list[4:6])
+                    datacite_geolocations += [ datacite_geolocation ]
                 else:
-                    datacite_geolocation['geoLocationPoint'] = ' '.join(coordinates_list[:2])
+                    if pkg_spatial.get('type', '').lower() == 'multipoint' :
+                        for point in pkg_spatial.get('coordinates', ''):
+                            log.debug("point=" + str(point))
+                            datacite_geolocation = collections.OrderedDict()
+                            datacite_geolocation['geoLocationPoint'] = ' '.join(self._flatten_list( point, reverse = True))
+                            datacite_geolocations += [ datacite_geolocation ]
+                    else:
+                        datacite_geolocation = collections.OrderedDict()
+                        datacite_geolocation['geoLocationPoint'] = ' '.join(coordinates_list[:2])
+                        datacite_geolocations += [ datacite_geolocation ]
                 if ckan_geolocations:
                     datacite_geolocation_place = ckan_geolocations[0].get(self._joinTags([datacite_geolocation_tag, datacite_geolocation_place_tag]), '')
                     if datacite_geolocation_place:
+                        datacite_geolocation = collections.OrderedDict()
                         datacite_geolocation[datacite_geolocation_place_tag] = datacite_geolocation_place
-                datacite_geolocations += [ datacite_geolocation ]
+                        datacite_geolocations += [ datacite_geolocation ]
         except:
            # directly defined fields
            for geolocation in ckan_geolocations:
@@ -415,6 +427,7 @@ class Datacite31SchemingConverter(SchemingConverter):
                 datacite_geolocations += [ datacite_geolocation ]
 
         if datacite_geolocations:
+            log.debug("datacite_geolocations=" + str(datacite_geolocations))
             datacite_dict['resource']['geoLocations'] = {'geoLocation': datacite_geolocations }
 
         # Convert to xml
