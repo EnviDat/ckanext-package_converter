@@ -310,7 +310,7 @@ class Datacite31SchemingConverter(SchemingConverter):
         datacite_sizes = []
         for resource in dataset_dict.get('resources', []):
             if resource.get('size', ''):
-                datacite_sizes += [{'#text': resource.get('size', ' ') + ' bytes'}]
+                datacite_sizes += [{'#text': str(resource.get('size', ' ')) + ' bytes'}]
         if datacite_sizes:
              datacite_dict['resource'][datacite_size_group_tag] = {datacite_size_tag: datacite_sizes}
 

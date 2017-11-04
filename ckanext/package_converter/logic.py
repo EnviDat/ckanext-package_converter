@@ -1,4 +1,5 @@
 import sys
+import traceback
 import ckan.plugins.toolkit as toolkit
 from xmltodict import unparse
 from pylons import config
@@ -91,7 +92,7 @@ def export_as_record(id, output_format_name, context = {}, type='package'):
             dataset_dict['package_dict'] = package_dict
     else:
         dataset_dict = toolkit.get_action('package_show')(context, {'id': id})
-    
+
     matching_metadata_formats = MetadataFormats().get_metadata_formats(output_format_name)
     if not matching_metadata_formats:
         return ('Metadata format unknown {output_format_name}'.format(output_format_name=output_format_name))
@@ -111,5 +112,6 @@ def export_as_record(id, output_format_name, context = {}, type='package'):
         else:
             raise #Exception('Cannot convert')
     except:
-        return ('No converter available for format {0}'.format(output_format_name))
+        log.warn("Exception raised while coverting: " + traceback.format_exc())
+        return ('No converter available for format {0} \n\n (Exception: {1})'.format(output_format_name, traceback.format_exc(limit=1)))
 
