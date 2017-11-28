@@ -201,10 +201,10 @@ class Datacite31SchemingConverter(SchemingConverter):
         for ckan_creator in ckan_creators:
             datacite_creator = collections.OrderedDict()
             datacite_creator['creatorName'] = ckan_creator.get(self._joinTags([datacite_creator_tag, 'creatorName']), '')
+            datacite_creator['affiliation'] = ckan_creator.get(self._joinTags([datacite_creator_tag, 'affiliation']), '')
             if ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier']), False):
                 datacite_creator['nameIdentifier'] = { '#text': ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier']), ''),
                                                        '@nameIdentifierScheme':  ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier', 'nameIdentifierScheme']), '').upper() }
-            datacite_creator['affiliation'] = ckan_creator.get(self._joinTags([datacite_creator_tag, 'affiliation']), '')
             datacite_dict['resource'][datacite_creators_tag][datacite_creator_tag] += [ datacite_creator ]
 
         # Titles*
