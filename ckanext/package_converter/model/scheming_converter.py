@@ -259,10 +259,10 @@ class Datacite31SchemingConverter(SchemingConverter):
         for ckan_contributor in ckan_contributors:
             datacite_contributor = collections.OrderedDict()
             datacite_contributor['contributorName'] = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'contributorName']), '')
-            datacite_contributor['affiliation'] = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'affiliation']), '')
             if ckan_contributor.get(datacite_contributor_tag + '.' + 'nameIdentifier', False):
                 datacite_contributor['nameIdentifier'] = { '#text': ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'nameIdentifier']), ''),
                                                            '@nameIdentifierScheme':  ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'nameIdentifier', 'nameIdentifierScheme']) , '').upper() }
+            datacite_contributor['affiliation'] = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'affiliation']), '')
             ckan_contributor_type = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'contributorType']), 'ContactPerson')
             datacite_contributor['@contributorType'] = self._valueToDataciteCV (ckan_contributor_type, 'contributorType')
             datacite_contributors += [ datacite_contributor ]
