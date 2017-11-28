@@ -421,8 +421,10 @@ class Datacite31SchemingConverter(SchemingConverter):
            # directly defined fields
            for geolocation in ckan_geolocations:
                 datacite_geolocation = collections.OrderedDict()
-                datacite_geolocation[datacite_geolocation_point_tag] = geolocation.get(self._joinTags([datacite_geolocation_point_tag]), '')
-                datacite_geolocation[datacite_geolocation_box_tag] = geolocation.get(self._joinTags([datacite_geolocation_box_tag]), '')
+                if geolocation.get(self._joinTags([datacite_geolocation_point_tag])):
+                    datacite_geolocation[datacite_geolocation_point_tag] = geolocation.get(self._joinTags([datacite_geolocation_point_tag]), '')
+                if geolocation.get(self._joinTags([datacite_geolocation_box_tag])):
+                    datacite_geolocation[datacite_geolocation_box_tag] = geolocation.get(self._joinTags([datacite_geolocation_box_tag]), '')
                 datacite_geolocation[datacite_geolocation_place_tag] = geolocation.get(self._joinTags([datacite_geolocation_tag, datacite_geolocation_place_tag]), '')
                 datacite_geolocations += [ datacite_geolocation ]
 
