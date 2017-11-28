@@ -1,5 +1,6 @@
 from ckanext.package_converter.model.metadata_format import MetadataFormats, MetadataFormat, XMLMetadataFormat, FormatType
 from ckanext.package_converter.model.converter import Converters, XSLConverter
+from ckanext.package_converter.model.envidat_iso_converter import Iso19139Converter
 
 import os
 
@@ -24,6 +25,11 @@ MetadataFormats().add_metadata_format(XMLMetadataFormat('oai_dc', '2.0', 'http:/
 MetadataFormats().add_metadata_format(XMLMetadataFormat('oai_pmh', '2.0', 'http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd',
                                    namespace='http://www.openarchives.org/OAI/2.0/',
                                    description='XML Schema which can be used to validate replies to all OAI-PMH v2.0 requests'))
+
+MetadataFormats().add_metadata_format(XMLMetadataFormat('iso19139', '1.0', 'http://www.isotc211.org/2005/gmd/gmd.xsd', 
+                                             namespace='http://www.isotc211.org/2005/gmd',
+                                             description='ISO 19115:2003/19139 XML Metadata Format'))
+
 # Add Converters
 datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite_v.3.1_to_oai_dc_v2.0.xsl'
 datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_dc_xsl_relative_path)
@@ -36,5 +42,8 @@ datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_
 Converters().add_converter(XSLConverter(MetadataFormats().get_metadata_formats('datacite', '3.1')[0],
                       MetadataFormats().get_metadata_formats('dcat')[0],
                       datacite_oai_dc_xsl_path))
+                
+Converters().add_converter(Iso19139Converter())
+
 
 

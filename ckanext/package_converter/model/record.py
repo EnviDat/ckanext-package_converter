@@ -12,6 +12,9 @@ from metadata_format import MetadataFormats
 
 from logging import getLogger
 
+import logging
+logging.basicConfig()
+
 log = getLogger(__name__)
 
 class Record(object):
@@ -70,7 +73,10 @@ class XMLRecord(Record):
                 xsd_url_str = self.metadata_format.xsd_url.encode(encoding)
             # request XSD content
             res = requests.get(xsd_url_str)
-            xsd_content = res.content.replace('schemaLocation="include/',  'schemaLocation="' + xsd_url_str.rsplit("/", 1)[0] + '/include/')
+            xsd_content = res.content.replace('schemaLocation="include/', 
+                                              'schemaLocation="' + xsd_url_str.rsplit("/", 1)[0] + '/include/').replace(
+                                              'xs:include schemaLocation="..', 
+                                              'xs:include schemaLocation="' + xsd_url_str.rsplit("/", 2)[0])
         doc_xsd = etree.XML(xsd_content)
         schema = etree.XMLSchema(doc_xsd)
 
