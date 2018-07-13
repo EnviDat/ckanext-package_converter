@@ -293,7 +293,7 @@ class Iso19139Converter(BaseConverter):
         resource_formats = []
         distribution_formats = []
         for resource in dataset_dict.get('resources', []):
-            resource_format = resource.get('mimetype', resource.get('mimetype_inner', ''))
+            resource_format = resource.get('format', resource.get('mimetype', resource.get('mimetype_inner', '')))
             if resource_format:
                 resource_format = resource_format.upper()
                 if resource_format not in resource_formats:
@@ -304,8 +304,6 @@ class Iso19139Converter(BaseConverter):
                     distribution_formats += [{'gmd:MD_Format':md_format}]
         
         md_data_dist['gmd:distributionFormat'] = distribution_formats
-
-        log.debug(resource_formats)
         
         # assign to parent
         md_metadata_dict['gmd:distributionInfo'] = collections.OrderedDict()
