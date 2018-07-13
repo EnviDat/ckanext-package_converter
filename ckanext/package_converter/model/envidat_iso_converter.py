@@ -320,8 +320,13 @@ class Iso19139Converter(BaseConverter):
         
         # loop through resources
         for resource in dataset_dict.get('resources', []):
-            resource_name = resource.get('name', 'DATASET RESOURCE')
+            resource_name = resource.get('name', resource.get('id','DATASET RESOURCE'))
             resource_url = resource.get('url', toolkit.url_for(controller='resource', action='read', id=resource.get('id', '')))
+            # check if restricted
+            if not helpers.is_url(resource_url):
+                log.debug('resource is restricted: ' + resource_name)
+                resource_url = package_url + '/resource/' + resource.get('id', '')
+                
             log.debug([resource_url, resource_name])
             online_resource = self.get_online_resource(resource_url, resource_name)
             online_resources += [online_resource]
