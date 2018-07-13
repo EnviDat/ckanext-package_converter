@@ -42,8 +42,7 @@ datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_
 Converters().add_converter(XSLConverter(MetadataFormats().get_metadata_formats('datacite', '3.1')[0],
                       MetadataFormats().get_metadata_formats('dcat')[0],
                       datacite_oai_dc_xsl_path))
-                
-Converters().add_converter(Iso19139Converter())
 
+                
 
 

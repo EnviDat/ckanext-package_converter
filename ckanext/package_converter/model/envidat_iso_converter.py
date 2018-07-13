@@ -1,5 +1,8 @@
 import ckanext
 
+import ckan.lib.helpers as helpers
+import ckan.plugins.toolkit as toolkit
+
 from ckanext.package_converter.model.metadata_format import MetadataFormats
 from ckanext.package_converter.model.converter import BaseConverter
 from ckanext.package_converter.model.record import Record, JSONRecord, XMLRecord
@@ -27,7 +30,7 @@ class Iso19139Converter(BaseConverter):
             dataset_dict = record.get_json_dict()
             converted_content = self._iso_convert_dataset(dataset_dict)
             converted_record = XMLRecord.from_record(Record(self.output_format, converted_content))
-            # log.debug("Validating record..." + str(converted_record.validate()))
+            #log.debug(" **** Validating record..." + str(converted_record.validate()) + ' ****')
             return converted_record
         else:
             raise TypeError(('Converter is not compatible with the record format {record_format}({record_version}). ' +
@@ -53,22 +56,32 @@ class Iso19139Converter(BaseConverter):
         md_metadata_dict['@xmlns:gco']="http://www.isotc211.org/2005/gco"
         md_metadata_dict['@xmlns:geonet']="http://www.fao.org/geonetwork"
         md_metadata_dict['@xmlns:csw']="http://www.opengis.net/cat/csw/2.0.2"
-        
+        md_metadata_dict['@xmlns:srv']="http://www.isotc211.org/2005/srv"
+        md_metadata_dict['@xmlns:gmx']="http://www.isotc211.org/2005/gmx"
+               
         md_metadata_dict['@xsi:schemaLocation'] = '{namespace} {schema}'.format(namespace=self.output_format.get_namespace(), 
                                                                                 schema=self.output_format.get_xsd_url())
         
         # File Identifier (O)
-        md_metadata_dict['gmd:fileIdentifier'] = { '@xmlns:srv':"http://www.isotc211.org/2005/srv",
-                                                   '@xmlns:gmx':"http://www.isotc211.org/2005/gmx"}
-        md_metadata_dict['gmd:fileIdentifier']['gco:CharacterString'] = dataset_dict.get('id', '')
+        identifier = dataset_dict.get('id', '')
+        doi = dataset_dict.get('doi','')
+        if doi:
+            identifier = 'doi:' + doi.strip()
+        md_metadata_dict['gmd:fileIdentifier'] = {'gco:CharacterString':identifier}
 
         # Metadata language (C) 3-letter from ISO 639-2/B 
         iso_language = self._get_iso_language_code(dataset_dict.get('language', 'en'))
         md_metadata_dict['gmd:language'] = {'gco:CharacterString':iso_language}
 
         # Dataset character set (C) : Defaulting to UTF-8 
-        md_metadata_dict['gmd:characterSet'] = {'gmd:MD_CharacterSetCode':{ '@codeListValue':"utf8",
-                                                '@codeList':"http://www.isotc211.org/2005/resources/codeList.xml#MD_CharacterSetCode" }}
+        md_metadata_dict['gmd:characterSet'] = {'gmd:MD_CharacterSetCode':{ '@codeListValue':"MD_CharacterSetCode_utf8",
+                                                '@codeList':"http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_CharacterSetCode",
+                                                '@codeSpace':'ISOTC211/19115',
+                                                '#text':'MD_CharacterSetCode_utf8'}}
+        
+        # Hierarchy Level (O)
+        md_metadata_dict['gmd:hierarchyLevel'] = {'gmd:MD_ScopeCode':{'@codeList':"http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode",
+                                                  '@codeListValue':"dataset"}}
         
         # Point of Contact (M)
         maintainer = json.loads(dataset_dict.get('maintainer', '{}'))
@@ -77,43 +90,40 @@ class Iso19139Converter(BaseConverter):
         
         responsible_party_contact['gmd:individualName'] = {'gco:CharacterString':maintainer.get('name','')}
         responsible_party_contact['gmd:organisationName'] = {'gco:CharacterString':maintainer.get('affiliation','')}
-        responsible_party_contact['gmd:positionName'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
+#        responsible_party_contact['gmd:positionName'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
         
         rpc_ci_contact = collections.OrderedDict()
-        rpc_ci_contact['gmd:phone'] = {'gmd:CI_Telephone':collections.OrderedDict()}
-        rpc_ci_contact['gmd:phone']['gmd:CI_Telephone']['gmd:voice'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
-        rpc_ci_contact['gmd:phone']['gmd:CI_Telephone']['gmd:facsimile'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
+#         rpc_ci_contact['gmd:phone'] = {'gmd:CI_Telephone':collections.OrderedDict()}
+#         rpc_ci_contact['gmd:phone']['gmd:CI_Telephone']['gmd:voice'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
+#         rpc_ci_contact['gmd:phone']['gmd:CI_Telephone']['gmd:facsimile'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
 
         rpc_ci_contact['gmd:address'] = {'gmd:CI_Address':collections.OrderedDict()}
-        rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:deliveryPoint'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
-        rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:city'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
-        rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:administrativeArea'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
-        rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:postalCode'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
-        rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:country'] = {'gco:CharacterString':'Switzerland'}
+#         rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:deliveryPoint'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
+#         rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:city'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
+#         rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:administrativeArea'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
+#         rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:postalCode'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
+#         rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:country'] = {'gco:CharacterString':'Switzerland'}
         rpc_ci_contact['gmd:address']['gmd:CI_Address']['gmd:electronicMailAddress'] = self._get_or_missing(maintainer, 'email')
         
         responsible_party_contact['gmd:contactInfo'] = {'gmd:CI_Contact':rpc_ci_contact}
 
         responsible_party_contact['gmd:role'] = {'gmd:CI_RoleCode':{'@codeListValue':"pointOfContact",
-                                                                    '@codeList':"http://www.isotc211.org/2005/resources/codeList.xml#CI_RoleCode"}}
+                                                                    '@codeList':"http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode"}}
         
         md_metadata_dict['gmd:contact']={'gmd:CI_ResponsibleParty':responsible_party_contact}
         
         # Metadata Creation Date (M)
         metadata_created = parse(dataset_dict.get("metadata_created", '')).strftime("%Y-%m-%dT%H:%M:%S")
-        md_metadata_dict['gmd:dateStamp']={'gco:DateTime':{'@xmlns:srv':"http://www.isotc211.org/2005/srv",
-                                                         '@xmlns:gmx':"http://www.isotc211.org/2005/gmx",
-                                                         '#text':metadata_created}}
+        md_metadata_dict['gmd:dateStamp']={'gco:DateTime':{'#text':metadata_created}}
         
         # Metadata Standard and Version (O)
-        md_metadata_dict['gmd:metadataStandardName']={'gco:CharacterString':{
-                                                         '@xmlns:srv':"http://www.isotc211.org/2005/srv",
-                                                         '@xmlns:gmx':"http://www.isotc211.org/2005/gmx",
-                                                         '#text':'ISO 19115:2003/19139'}}
-        md_metadata_dict['gmd:metadataStandardVersion']={'gco:CharacterString':{
-                                                         '@xmlns:srv':"http://www.isotc211.org/2005/srv",
-                                                         '@xmlns:gmx':"http://www.isotc211.org/2005/gmx",
-                                                         '#text':'1.0'}}
+        md_metadata_dict['gmd:metadataStandardName']={'gco:CharacterString':{'#text':'ISO 19115:2003/19139'}}
+        md_metadata_dict['gmd:metadataStandardVersion']={'gco:CharacterString':{'#text':'1.0'}}
+        
+        # Reference System Information (O)
+        md_metadata_dict['gmd:referenceSystemInfo']={'gmd:MD_ReferenceSystem':{'gmd:referenceSystemIdentifier':{
+                                                     'gmd:RS_Identifier':{'gmd:code':{'gco:CharacterString':{'#text':'EPSG:4326'}}}}}}
+        
         # Identification Info (mandatory subelements)
         md_data_id = collections.OrderedDict()
         # citation
@@ -124,26 +134,28 @@ class Iso19139Converter(BaseConverter):
         citation_dict['gmd:date']['gmd:CI_Date']['gmd:date'] = {'gco:Date':self._get_publication_date(dataset_dict)}
         citation_dict['gmd:date']['gmd:CI_Date']['gmd:dateType'] = {'gmd:CI_DateTypeCode':{
                                                                            '@codeListValue':'publication',
-                                                                           '@codeList':'http://www.isotc211.org/2005/resources/codeList.xml#CI_DateTypeCode'
+                                                                           '@codeList':'http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode'
                                                                            }}
         presentation_form = self._cap_code(dataset_dict.get('resource_type', ''))
         if presentation_form:
             citation_dict['gmd:presentationForm'] = {'gmd:CI_PresentationFormCode':{
                                                                '@codeListValue': presentation_form,
-                                                               '@codeList':'http://www.isotc211.org/2005/resources/codeList.xml#CI_PresentationFormCode'    
+                                                               '@codeList':'http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_PresentationFormCode'    
                                                             }} 
         md_data_id['gmd:citation'] = {'gmd:CI_Citation':citation_dict}   
         # abstract    
         md_data_id['gmd:abstract'] = {'gco:CharacterString':dataset_dict.get('notes','').replace('\n', ' ').replace('\r', ' ')}
         
         # purpose (only in extras)
-        md_data_id['gmd:purpose'] = self._get_or_missing(extras_dict, 'purpose', ignore_case=True)
+        purpose = self._get_ignore_case(extras_dict, 'purpose')
+        if purpose:
+            md_data_id['gmd:purpose'] = self._get_or_missing(extras_dict, 'purpose', ignore_case=True)
         # status (only in extras)
         status = self._get_ignore_case(extras_dict, 'status')
         if status:
             md_data_id['gmd:status'] = {'gmd:MD_ProgressCode':{
                                                '@codeListValue':self._cap_code(status), 
-                                               '@codeList':"http://www.isotc211.org/2005/resources/codeList.xml#MD_ProgressCode"
+                                               '@codeList':"http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ProgressCode"
                                        }}
         # Point of contact (copy)
         md_data_id['gmd:pointOfContact'] = {'gmd:CI_ResponsibleParty':copy.deepcopy(responsible_party_contact)}
@@ -155,7 +167,7 @@ class Iso19139Converter(BaseConverter):
                                                         'gmd:maintenanceAndUpdateFrequency':{
                                                            'gmd:MD_MaintenanceFrequencyCode':{
                                                                  '@codeListValue':self._cap_code(maintenance),
-                                                                 '@codeList':"http://www.isotc211.org/2005/resources/codeList.xml#MD_MaintenanceFrequencyCode"
+                                                                 '@codeList':"http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_MaintenanceFrequencyCode"
                                                             }
                                                        }
                                                     }
@@ -166,7 +178,7 @@ class Iso19139Converter(BaseConverter):
         keywords = self.get_keywords(dataset_dict)
         if keywords:
             keyword_type = {'gmd:MD_KeywordTypeCode':{'@codeListValue':'theme', 
-                                      '@codeList':'http://www.isotc211.org/2005/resources/codeList.xml#MD_KeywordTypeCode'}}
+                                      '@codeList':'http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_KeywordTypeCode'}}
             md_data_id['gmd:descriptiveKeywords'] = {'gmd:MD_Keywords':{'gmd:keyword': keywords, 'gmd:type':keyword_type}}
             
         # resource constraints (DRAFT)
@@ -174,12 +186,12 @@ class Iso19139Converter(BaseConverter):
         access_constraints = self._get_ignore_case(extras_dict, 'accessConstraints')
         if access_constraints:
             md_legal_constraints['gmd:accessConstraints'] = {'gmd:MD_RestrictionCode':{'@codeListValue':self._cap_code(access_constraints),
-                                                                                       '@codeList':'http://www.isotc211.org/2005/resources/codeList.xml#MD_RestrictionCode'}}
+                                                                                       '@codeList':'http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_RestrictionCode'}}
         use_constraints = self._get_ignore_case(extras_dict, 'useConstraints')
         if use_constraints:
             md_legal_constraints['gmd:useConstraints'] = {'gmd:MD_RestrictionCode':{'@codeListValue':self._cap_code(use_constraints),
-                                                                                '@codeList':'http://www.isotc211.org/2005/resources/codeList.xml#MD_RestrictionCode'}}
-        md_legal_constraints['gmd:otherConstraints'] = self._get_or_missing(dataset_dict, 'license_id')
+                                                                                '@codeList':'http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_RestrictionCode'}}
+        md_legal_constraints['gmd:otherConstraints'] = self._get_or_missing(dataset_dict, 'license_title')
 
         md_data_id['gmd:resourceConstraints'] = {'gmd:MD_LegalConstraints':md_legal_constraints}
         
@@ -274,6 +286,51 @@ class Iso19139Converter(BaseConverter):
         # assign to parent
         md_metadata_dict['gmd:identificationInfo'] = {'gmd:MD_DataIdentification':md_data_id}
         
+        # distribution info (O)
+        md_data_dist = collections.OrderedDict()
+        
+        # distribution format
+        resource_formats = []
+        distribution_formats = []
+        for resource in dataset_dict.get('resources', []):
+            resource_format = resource.get('mimetype', resource.get('mimetype_inner', ''))
+            if resource_format:
+                resource_format = resource_format.upper()
+                if resource_format not in resource_formats:
+                    resource_formats += [resource_format]
+                    md_format = collections.OrderedDict()
+                    md_format['gmd:name'] = {'gco:CharacterString':resource_format}
+                    md_format['gmd:version'] = {'gco:CharacterString':''}
+                    distribution_formats += [{'gmd:MD_Format':md_format}]
+        
+        md_data_dist['gmd:distributionFormat'] = distribution_formats
+
+        log.debug(resource_formats)
+        
+        # assign to parent
+        md_metadata_dict['gmd:distributionInfo'] = collections.OrderedDict()
+        md_metadata_dict['gmd:distributionInfo']['gmd:MD_Distribution'] = md_data_dist
+    
+        # transfer options
+        online_resources = []
+        
+        # dataset url as information
+        protocol, host = helpers.get_site_protocol_and_host()
+        package_url = protocol + '://' + host + toolkit.url_for(controller='package', action='read', id=dataset_dict.get('name', ''))
+        online_resource_dataset = self.get_online_resource(package_url, 'dataset metadata', 'information')
+        online_resources += [online_resource_dataset]
+        
+        # loop through resources
+        for resource in dataset_dict.get('resources', []):
+            resource_name = resource.get('name', 'DATASET RESOURCE')
+            resource_url = resource.get('url', toolkit.url_for(controller='resource', action='read', id=resource.get('id', '')))
+            log.debug([resource_url, resource_name])
+            online_resource = self.get_online_resource(resource_url, resource_name)
+            online_resources += [online_resource]
+        
+        # assign to parent
+        md_metadata_dict['gmd:distributionInfo']['gmd:MD_Distribution']['gmd:transferOptions'] = {'gmd:MD_DigitalTransferOptions':{'gmd:onLine':online_resources}}
+ 
         # Root element
         iso_dict = collections.OrderedDict()
         iso_dict['gmd:MD_Metadata'] = md_metadata_dict
@@ -310,7 +367,7 @@ class Iso19139Converter(BaseConverter):
     # translate to 3-letter code http://www.loc.gov/standards/iso639-2/ISO-639-2_utf-8.txt
     def _get_iso_language_code(self, code):
         lookup_dict = {'en':'eng','de':'ger','it':'ita','fr':'fre', 'ro':'roh'}        
-        return lookup_dict.get(code)
+        return lookup_dict.get(code, 'eng').title()
 
     # Take date of type Available or the publication year
     def _get_publication_date(self, data_dict):
@@ -362,7 +419,23 @@ class Iso19139Converter(BaseConverter):
     def get_keywords(self, data_dict):
         keywords = []
         for tag in data_dict.get('tags',[]):
-            name = tag.get('display_name', '').lower()
+            name = tag.get('display_name', '').upper()
             keywords += [{'gco:CharacterString':name}]
         return keywords
+    
+    # Create a online resource digital transfer element
+    def get_online_resource(self, url, name, function = 'download'):
+        protocol = url.split(':')[0]
+        
+        online_resource_dataset = {'gmd:CI_OnlineResource': collections.OrderedDict()}
+        
+        online_resource_dataset['gmd:CI_OnlineResource']['gmd:linkage'] = {'gmd:URL':url}
+        online_resource_dataset['gmd:CI_OnlineResource']['gmd:protocol'] = {'gco:CharacterString':protocol.upper()}
+        online_resource_dataset['gmd:CI_OnlineResource']['gmd:name'] = {'gco:CharacterString': name.upper()}
+        online_resource_dataset['gmd:CI_OnlineResource']['gmd:function'] = {'gmd:CI_OnLineFunctionCode': 
+                                                                 {'@codeList':"http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_OnLineFunctionCode",
+                                                                  '@codeListValue':function,
+                                                                  '#text':function}}
+        return online_resource_dataset
+
 

@@ -72,6 +72,7 @@ class XMLRecord(Record):
             if isinstance(self.metadata_format.xsd_url, unicode):
                 xsd_url_str = self.metadata_format.xsd_url.encode(encoding)
             # request XSD content
+            log.debug("Validating against " + xsd_url_str)
             res = requests.get(xsd_url_str)
             xsd_content = res.content.replace('schemaLocation="include/', 
                                               'schemaLocation="' + xsd_url_str.rsplit("/", 1)[0] + '/include/').replace(

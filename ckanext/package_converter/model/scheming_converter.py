@@ -147,7 +147,9 @@ class Datacite31SchemingConverter(SchemingConverter):
             #log.debug('dataset_dict = ' + repr(dataset_dict))
             converted_content = self._datacite_converter_schema(dataset_dict)
             converted_record = Record(self.output_format, converted_content)
-            return XMLRecord.from_record(converted_record)
+            converted_xml_record = XMLRecord.from_record(converted_record)
+            #log.debug("Validating record..." + str(converted_xml_record.validate()))
+            return converted_xml_record
         else:
             raise TypeError(('Converter is not compatible with the record format {record_format}({record_version}). ' +
                              'Accepted format is {input_format}({input_version}).').format(
