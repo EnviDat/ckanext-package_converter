@@ -61,7 +61,7 @@ class XMLRecord(Record):
         xml_dom = fromstring(self.content.encode(encoding), parser=parser)
         return(xml_dom)
 
-    def validate(self, custom_xsd='', encoding='utf-8'):
+    def validate(self, custom_xsd='', custom_replace=[], encoding='utf-8'):
         xml_dom = self._get_dom(encoding)
 
         if custom_xsd:
@@ -74,10 +74,18 @@ class XMLRecord(Record):
             # request XSD content
             log.debug("Validating against " + xsd_url_str)
             res = requests.get(xsd_url_str)
-            xsd_content = res.content.replace('schemaLocation="include/', 
+            xsd_content = res.content
+            
+            # fix issues with included xsd's
+            if custom_replace:
+                for replace_pair in custom_replace:
+                    xsd_content = xsd_content.replace(replace_pair[0], replace_pair[1])
+            else:
+                xsd_content = xsd_content.replace('schemaLocation="include/', 
                                               'schemaLocation="' + xsd_url_str.rsplit("/", 1)[0] + '/include/').replace(
                                               'xs:include schemaLocation="..', 
                                               'xs:include schemaLocation="' + xsd_url_str.rsplit("/", 2)[0])
+        
         doc_xsd = etree.XML(xsd_content)
         schema = etree.XMLSchema(doc_xsd)
 

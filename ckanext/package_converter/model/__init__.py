@@ -1,6 +1,5 @@
 from ckanext.package_converter.model.metadata_format import MetadataFormats, MetadataFormat, XMLMetadataFormat, FormatType
 from ckanext.package_converter.model.converter import Converters, XSLConverter
-from ckanext.package_converter.model.envidat_iso_converter import Iso19139Converter
 
 import os
 
@@ -29,6 +28,10 @@ MetadataFormats().add_metadata_format(XMLMetadataFormat('oai_pmh', '2.0', 'http:
 MetadataFormats().add_metadata_format(XMLMetadataFormat('iso19139', '1.0', 'http://www.isotc211.org/2005/gmd/gmd.xsd', 
                                              namespace='http://www.isotc211.org/2005/gmd',
                                              description='ISO 19115:2003/19139 XML Metadata Format'))
+
+MetadataFormats().add_metadata_format(XMLMetadataFormat('gcmd_dif', '10.2', 'http://gcmd.gsfc.nasa.gov/Aboutus/xml/dif/dif_v10.2.xsd', 
+                                             namespace='http://gcmd.gsfc.nasa.gov/Aboutus/xml/dif/',
+                                             description='Global Change Master Directory Directory Interchange Format (GCMD DIF)'))
 
 # Add Converters
 datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite_v.3.1_to_oai_dc_v2.0.xsl'

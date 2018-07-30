@@ -18,7 +18,8 @@ import copy
 from logging import getLogger
 log = getLogger(__name__)
 
-
+# this converter is only valid for the metadata schema for EnviDat 
+# (search envidat/envidat_theme project in github)
 class Iso19139Converter(BaseConverter):
 
     def __init__(self):
