@@ -109,7 +109,14 @@ class GcmdDifConverter(BaseConverter):
         package_url = protocol + '://' + host + toolkit.url_for(controller='package', action='read', id=dataset_dict.get('name', ''))
         dif_metadata_dict['Dataset_Citation']['Online_Resource'] = package_url
         
-        #<xs:element name="Personnel" type="PersonnelType" minOccurs="0" maxOccurs="unbounded"/>
+        # "Personnel"
+        maintainer = json.loads(dataset_dict.get('maintainer', '{}'))
+        dif_metadata_dict['Personnel'] = collections.OrderedDict()
+        dif_metadata_dict['Personnel']['Role'] = "TECHNICAL CONTACT"
+        dif_metadata_dict['Personnel']['Contact_Person'] = collections.OrderedDict()
+        dif_metadata_dict['Personnel']['Contact_Person']['First_Name'] = maintainer.get('name', '').strip().split(' ')[0]
+        dif_metadata_dict['Personnel']['Contact_Person']['Last_Name'] = maintainer.get('name', '').strip().split(' ')[-1]
+        dif_metadata_dict['Personnel']['Contact_Person']['Email'] = maintainer.get('email', '')
 
         # Science_Keywords (M)*
         science_keywords = self.get_science_keywords(dataset_dict, extras_dict)
@@ -266,34 +273,34 @@ class GcmdDifConverter(BaseConverter):
             "biodiversity-and-conservation-biology":['EARTH SCIENCE', 'BIOSPHERE', 'BIODIVERSITY'],
 			"cces":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
 			"clench":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"community-ecology":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ECOLOGY'],
-			"conservation-biology":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"cryos":['EARTH SCIENCE', 'CRYOSPHERE', 'ICE'],
-			"d-baug":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+			"community-ecology":['EARTH SCIENCE', 'BIOSPHERE', 'ECOLOGY'],
+			"conservation-biology":['EARTH SCIENCE', 'BIOSPHERE', 'BIOLOGY'],
+			"cryos":['EARTH SCIENCE', 'CRYOSPHERE', 'SNOW'],
+			"d-baug":['EARTH SCIENCE', 'SPECTRAL/ENGINEERING', 'ENVIRONMENT'],
 			"usys":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
 			"dynamic-macroecology":['EARTH SCIENCE', 'BIOSPHERE', 'MACROECOLOGY'],
 			"ecosystems-dynamics":['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS'],
 			"epfl":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
 			"ethz":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"feh":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+			"feh":['EARTH SCIENCE', 'AGRICULTURE', 'ENVIRONMENT'],
 			"forema":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
 			"forest-dynamics":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
 			"forest-soils-and-biogeochemistry":['EARTH SCIENCE', 'SOLID EARTH', 'BIOGEOCHEMISTRY'],
 			"gebirgshydrologie":['EARTH SCIENCE', 'LAND SURFACE', 'HYDROLOGY'],
-			"gis":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'GIS'],
+			"gis":['EARTH SCIENCE', 'LAND SURFACE', 'GIS'],
 			"hazri":['EARTH SCIENCE', 'SOLID EARTH', 'NATURAL HAZARDS'],
 			"ibp":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"landscape-dynamics":['EARTH SCIENCE', 'LAND SURFACE', 'LADSCAPE'],
+			"landscape-dynamics":['EARTH SCIENCE', 'LAND SURFACE', 'LANDSCAPE'],
 			"lwf":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
 			"mountain-ecosystems":['EARTH SCIENCE', 'BIOSPHERE', 'MOUNTAIN ECOSYSTEMS'],
-			"nfi":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"plant-animal-interactions":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+			"nfi":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
+			"plant-animal-interactions":['EARTH SCIENCE', 'BIOSPHERE', 'INTERACTIONS'],
 			"remote-sensing":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"resource-analysis":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+			"resource-analysis":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST RESOURCES'],
 			"slf":['EARTH SCIENCE', 'CRYOSPHERE', 'SNOW'],
 			"stand-dynamics-and-silviculture":['EARTH SCIENCE', 'BIOSPHERE', 'SILVICULTURE'],
 			"swissforestlab-swissfl":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
-			"vaw":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+			"vaw":['EARTH SCIENCE', 'TERRESTRIAL HYDROSPHERE', 'GLACIOLOGY'],
 			"wsl":['EARTH SCIENCE', 'LAND SURFACE', 'LANDSCAPE']
         }
         science_keywords = organizations_keywords_dict.get(dataset_organization, default_keywords)
