@@ -168,72 +168,53 @@ class GcmdDifConverter(BaseConverter):
         except:
             spatial = {}    
         if spatial:
-                log.debug(spatial)
                 dif_metadata_dict['Spatial_Coverage']['Geometry'] = collections.OrderedDict()
                 dif_metadata_dict['Spatial_Coverage']['Geometry']['Coordinate_System'] = 'CARTESIAN'
                 ### "Bounding_Rectangle"
                 bounding_rectangle = collections.OrderedDict()
                 bound_box_coordinates = self._get_bounding_rectangle(spatial.get('coordinates',[]))
-                log.debug(bound_box_coordinates)
                 bounding_rectangle["Center_Point"] = collections.OrderedDict()
                 bounding_rectangle["Center_Point"]["Point_Longitude"] = str((bound_box_coordinates[3] + bound_box_coordinates[2])/2.0)
                 bounding_rectangle["Center_Point"]["Point_Latitude"] = str((bound_box_coordinates[1] + bound_box_coordinates[0])/2.0)
-                bounding_rectangle["Southernmost_Latitude"] = str(bound_box_coordinates [2] - 0.05)
-                bounding_rectangle["Northernmost_Latitude"] = str(bound_box_coordinates [3] + 0.05)
-                bounding_rectangle["Westernmost_Longitude"] = str(bound_box_coordinates [0] - 0.05)
-                bounding_rectangle["Easternmost_Longitude"] = str(bound_box_coordinates [1] + 0.05)
-                log.debug(bounding_rectangle)
-                dif_metadata_dict['Spatial_Coverage']['Geometry']['Bounding_Rectangle'] = bounding_rectangle
-        
-#             geographic_element = collections.OrderedDict()
-#             if spatial.get('type') == 'Point':
-#                  gml_id_index += 1
-#                  point_id = 'P' + "%03d" % (gml_id_index,)
-#                  coordinates = []
-#                  for coordinate in spatial.get('coordinates',[]):
-#                      coordinates += [str(coordinate)]
-#                  point_element = {'@gml:id':point_id, 'gml:pos': ' '.join(coordinates)}
-#                  geographic_element = {'gmd:EX_BoundingPolygon':{'gmd:polygon':{'gml:Point':point_element}}} 
-#             elif spatial.get('type') == 'MultiPoint':
-#                  gml_id_index += 1
-#                  multi_point_id = 'MP' + "%03d" % (gml_id_index,)
-#                  multi_point_element = {'@gml:id':multi_point_id, 'gml:pointMember':[]}
-#                  for coordinate_pair in spatial.get('coordinates',[]):
-#                      gml_id_index += 1
-#                      point_id = 'P' + "%03d" % (gml_id_index,)
-#                      coordinates = ' '.join([str(coordinate_pair[0]), str(coordinate_pair[1])]) 
-#                      point_element = {'gml:Point':{'@gml:id':point_id, 'gml:pos': coordinates}}
-#                      multi_point_element ['gml:pointMember'] += [point_element]
-#                  geographic_element = {'gmd:EX_BoundingPolygon':{'gmd:polygon':{'gml:MultiPoint':multi_point_element}}} 
-#             else:
-#                  coordinates = spatial.get('coordinates',[])[0]
-#                  if self.is_a_box(coordinates):
-#                      bounding_box =collections.OrderedDict()
-#                      bounding_box['gmd:westBoundLongitude'] = {'gco:Decimal':str(min(coordinates[0][0], coordinates[2][0]))}
-#                      bounding_box['gmd:eastBoundLongitude'] = {'gco:Decimal':str(max(coordinates[0][0], coordinates[2][0]))}
-#                      bounding_box['gmd:southBoundLatitude'] = {'gco:Decimal':str(min(coordinates[0][1], coordinates[2][1]))}
-#                      bounding_box['gmd:northBoundLatitude'] = {'gco:Decimal':str(max(coordinates[0][1], coordinates[2][1]))}
-#                      geographic_element = {'gmd:EX_GeographicBoundingBox':bounding_box} 
-#                  else:
-#                      gml_id_index += 1
-#                      polygon_id = 'PL' + "%03d" % (gml_id_index,)
-#                      pos_list = []
-#                      for coordinate_pair in coordinates:
-#                          coordinates = ' '.join([str(coordinate_pair[0]), str(coordinate_pair[1])]) 
-#                          pos_list += [coordinates]
-#                      polygon_element = {'@gml:id':polygon_id, 'gml:interior':{'gml:LinearRing':{'gml:pos': pos_list}}}
-#                      geographic_element = {'gmd:EX_BoundingPolygon':{'gmd:polygon':{'gml:Polygon':polygon_element}}}       
-         
-        ### <xs:element name="Point" type="Point"/>
-        ### <xs:element name="Polygon" type="GPolygon"/>
-        
+                bounding_rectangle["Southernmost_Latitude"] = str(max(bound_box_coordinates [2] - 0.0001, -180))
+                bounding_rectangle["Northernmost_Latitude"] = str(min(bound_box_coordinates [3] + 0.0001, 180))
+                bounding_rectangle["Westernmost_Longitude"] = str(max(bound_box_coordinates [0] - 0.0001, -180))
+                bounding_rectangle["Easternmost_Longitude"] = str(min(bound_box_coordinates [1] + 0.0001,180))
+                dif_metadata_dict['Spatial_Coverage']['Geometry']['Bounding_Rectangle'] = bounding_rectangle        
+                
+                ### <xs:element name="Point" type="Point"/>
+                if spatial.get('type') == 'Point':
+                     dif_metadata_dict['Spatial_Coverage']['Geometry']['Point'] = collections.OrderedDict()
+                     dif_metadata_dict['Spatial_Coverage']['Geometry']['Point']['Point_Longitude'] = bound_box_coordinates[0]
+                     dif_metadata_dict['Spatial_Coverage']['Geometry']['Point']['Point_Latitude'] = bound_box_coordinates[3]
+                     latitude = bound_box_coordinates[3]
+                elif spatial.get('type') == 'MultiPoint':
+                     points = []
+                     for coordinate_pair in spatial.get('coordinates',[]):
+                         point = collections.OrderedDict()
+                         point['Point_Longitude'] = str(coordinate_pair[0])
+                         point['Point_Latitude'] = str(coordinate_pair[1])
+                         points += [point]
+                     dif_metadata_dict['Spatial_Coverage']['Geometry']['Point'] = points
+                elif spatial.get('type') == 'Polygon':
+                ### <xs:element name="Polygon" type="GPolygon"/>
+                     points = []
+                     for coordinate_pair in spatial.get('coordinates',[])[0]:
+                         point = collections.OrderedDict()
+                         point['Point_Longitude'] = str(coordinate_pair[0])
+                         point['Point_Latitude'] = str(coordinate_pair[1])
+                         points += [point]
+                     dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon'] = collections.OrderedDict()
+                     dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon']['Boundary'] = {'Point': points}
+                     dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon']['Center_Point'] = copy.deepcopy(dif_metadata_dict['Spatial_Coverage']['Geometry']['Bounding_Rectangle']['Center_Point'])
+
         
         ## <xs:element name="Orbit_Parameters" type="OrbitParameters" minOccurs="0"/>
         ## <xs:element name="Vertical_Spatial_Info" type="VerticalSpatialInfo" minOccurs="0" maxOccurs="unbounded"/>
         ## <xs:element name="Spatial_Info" type="SpatialInfo" minOccurs="0"/>
 
         #<xs:element name="Location" type="LocationType" minOccurs="0" maxOccurs="unbounded"/>
-        # TODO: Cannot know type, could be set to CONTINENT type and then Europe (?)
+        #TODO: Cannot know type, could be set to CONTINENT type and then Europe (?)
         #<xs:element name="Data_Resolution" type="DataResolutionType" minOccurs="0" maxOccurs="unbounded"/>
 
         # Project (M)
@@ -474,7 +455,7 @@ class GcmdDifConverter(BaseConverter):
     def _get_bounding_rectangle(self, coordinates):
         flatten_coordinates = coordinates
         while type(flatten_coordinates[0]) is list:
- 		    flatten_coordinates = [item for sublist in flatten_coordinates for item in sublist]
+            flatten_coordinates = [item for sublist in flatten_coordinates for item in sublist]
         longitude_coords = flatten_coordinates[0:][::2]                   
         latitude_coords = flatten_coordinates[1:][::2]  
         return([min(longitude_coords),max(longitude_coords), min(latitude_coords), max(latitude_coords)])
