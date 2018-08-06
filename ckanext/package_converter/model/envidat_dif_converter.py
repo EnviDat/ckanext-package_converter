@@ -472,6 +472,6 @@ class GcmdDifConverter(BaseConverter):
         
     def _get_bounding_rectangle(self, coordinates):
         flatten_coordinates = [item for sublist in coordinates for item in sublist]
-        longitude_coords = coordinates[0:][::2]                   
-        latitude_coords = coordinates[1:][::2]  
+        longitude_coords = flatten_coordinates[0:][::2]                   
+        latitude_coords = flatten_coordinates[1:][::2]  
         return([min(longitude_coords),max(longitude_coords), min(latitude_coords), max(latitude_coords)])
