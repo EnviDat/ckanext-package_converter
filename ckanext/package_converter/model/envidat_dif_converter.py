@@ -472,8 +472,9 @@ class GcmdDifConverter(BaseConverter):
         return lookup_dict.get(code, 'en').title()
         
     def _get_bounding_rectangle(self, coordinates):
-        flatten_coordinates = [item for sublist in coordinates for item in sublist]
-        flatten_coordinates = [item for sublist in flatten_coordinates for item in sublist]
+        flatten_coordinates = coordinates
+        while type(flatten_coordinates[0]) is list:
+ 		    flatten_coordinates = [item for sublist in flatten_coordinates for item in sublist]
         longitude_coords = flatten_coordinates[0:][::2]                   
         latitude_coords = flatten_coordinates[1:][::2]  
         return([min(longitude_coords),max(longitude_coords), min(latitude_coords), max(latitude_coords)])
