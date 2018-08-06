@@ -174,9 +174,10 @@ class GcmdDifConverter(BaseConverter):
                 ### "Bounding_Rectangle"
                 bounding_rectangle = collections.OrderedDict()
                 bound_box_coordinates = self._get_bounding_rectangle(spatial.get('coordinates',[]))
+                log.debug(bound_box_coordinates)
                 bounding_rectangle["Center_Point"] = collections.OrderedDict()
-                bounding_rectangle["Center_Point"]["Point_Longitude"] = str((bound_box_coordinates [3] + bound_box_coordinates [2])/2.0)
-                bounding_rectangle["Center_Point"]["Point_Latitude"] = str((bound_box_coordinates [1] + bound_box_coordinates [0])/2.0)
+                bounding_rectangle["Center_Point"]["Point_Longitude"] = str((bound_box_coordinates[3] + bound_box_coordinates[2])/2.0)
+                bounding_rectangle["Center_Point"]["Point_Latitude"] = str((bound_box_coordinates[1] + bound_box_coordinates[0])/2.0)
                 bounding_rectangle["Southernmost_Latitude"] = str(bound_box_coordinates [2] - 0.05)
                 bounding_rectangle["Northernmost_Latitude"] = str(bound_box_coordinates [3] + 0.05)
                 bounding_rectangle["Westernmost_Longitude"] = str(bound_box_coordinates [0] - 0.05)
