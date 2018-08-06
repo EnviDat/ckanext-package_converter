@@ -50,7 +50,9 @@ class GcmdDifConverter(BaseConverter):
 
     def _dif_convert_dataset(self, dataset_dict):
     
+        # some values only as custom fields
         extras_dict = self._extras_as_dict(dataset_dict.get('extras',{}))
+        dif_extras = ['science_keywords', 'purpose']
         
         dif_metadata_dict = collections.OrderedDict()
 
@@ -87,6 +89,7 @@ class GcmdDifConverter(BaseConverter):
         dif_metadata_dict['Dataset_Citation']['Dataset_Release_Date'] = publication_year
         
         ## "Dataset_Release_Place" 
+        dif_metadata_dict['Dataset_Citation']['Dataset_Release_Place'] = 'Birmensdorf, Switzerland'
         
         ## "Dataset_Publisher"
         dif_metadata_dict['Dataset_Citation']['Dataset_Publisher'] = json.loads(dataset_dict.get('publication', '{}')).get('publisher','')
@@ -96,6 +99,7 @@ class GcmdDifConverter(BaseConverter):
         
         ## "Issue_Identification" 
         ## "Data_Presentation_Form" 
+        dif_metadata_dict['Dataset_Citation']['Data_Presentation_Form'] = ','.join(self._get_resource_formats(dataset_dict))
         ## "Other_Citation_Details"
         ## "Persistent_Identifier"
         doi = dataset_dict.get('doi','')
@@ -119,18 +123,18 @@ class GcmdDifConverter(BaseConverter):
         dif_metadata_dict['Personnel']['Contact_Person']['Email'] = maintainer.get('email', '')
 
         # Science_Keywords (M)*
-        science_keywords = self.get_science_keywords(dataset_dict, extras_dict)
+        science_keywords = self._get_science_keywords(dataset_dict, extras_dict)
         dif_metadata_dict['Science_Keywords'] = collections.OrderedDict()
         dif_metadata_dict['Science_Keywords']['Category'] = science_keywords[0]
         dif_metadata_dict['Science_Keywords']['Topic'] = science_keywords[1]
         dif_metadata_dict['Science_Keywords']['Term'] = science_keywords[2]
         
-        #<xs:element name="ISO_Topic_Category" type="ISOTopicCategoryType" minOccurs="0" maxOccurs="unbounded"/>
+        # "ISOTopicCategoryType"
         # select from https://gcmd.nasa.gov/add/difguide/iso_topic_category.html
-        #dif_metadata_dict['ISO_Topic_Category'] = 'Geoscientific Information'
+        dif_metadata_dict['ISO_Topic_Category'] = 'environment'
         
         # Ancillary_Keyword (O)* 
-        dif_metadata_dict['Ancillary_Keyword'] = self.get_keywords(dataset_dict)
+        dif_metadata_dict['Ancillary_Keyword'] = self._get_keywords(dataset_dict)
         
         # "Platform"
         dif_metadata_dict['Platform'] = collections.OrderedDict()
@@ -144,32 +148,118 @@ class GcmdDifConverter(BaseConverter):
         dif_metadata_dict['Temporal_Coverage']['Single_DateTime'] = publication_year + '-01-01'
         # TODO: check if collected date(s) defined
         
-        #<xs:element name="Dataset_Progress" type="DatasetProgressType" minOccurs="0"/>
-
+        # "Dataset_Progress" draft or private -> IN WORK, doi -> COMPLETE (otherwise empty)
+        if dataset_dict.get('private',False) or dataset_dict.get('num_resources',0)==0:
+            dif_metadata_dict['Dataset_Progress'] = 'IN WORK'
+        elif dataset_dict.get('doi',''):
+            dif_metadata_dict['Dataset_Progress'] = 'COMPLETE'
+        
         # Spatial_Coverage (M) 
         dif_metadata_dict['Spatial_Coverage'] = collections.OrderedDict()
-        ## <xs:element name="Spatial_Coverage_Type" type="SpatialCoverageTypeEnum" minOccurs="0"/>
+        ## "Spatial_Coverage_Type"
         ## "Granule_Spatial_Representation" 
         dif_metadata_dict['Spatial_Coverage']['Granule_Spatial_Representation']= 'CARTESIAN'
         
         ## <xs:element name="Zone_Identifier" type="xs:string" minOccurs="0"/>
-        ## <xs:element name="Geometry" type="Geometry" minOccurs="0"/>
+        
+        ## "Geometry" [1]
+        try:
+            spatial = json.loads(dataset_dict.get('spatial', '{}'))
+        except:
+            spatial = {}    
+        if spatial:
+                log.debug(spatial)
+                dif_metadata_dict['Spatial_Coverage']['Geometry'] = collections.OrderedDict()
+                dif_metadata_dict['Spatial_Coverage']['Geometry']['Coordinate_System'] = 'CARTESIAN'
+                ### "Bounding_Rectangle"
+                bounding_rectangle = collections.OrderedDict()
+                bound_box_coordinates = self._get_bounding_rectangle(spatial.get('coordinates',[]))
+                bounding_rectangle["Center_Point"] = collections.OrderedDict()
+                bounding_rectangle["Center_Point"]["Point_Longitude"] = str((bound_box_coordinates [3] + bound_box_coordinates [2])/2.0)
+                bounding_rectangle["Center_Point"]["Point_Latitude"] = str((bound_box_coordinates [1] + bound_box_coordinates [0])/2.0)
+                bounding_rectangle["Southernmost_Latitude"] = str(bound_box_coordinates [2] - 0.05)
+                bounding_rectangle["Northernmost_Latitude"] = str(bound_box_coordinates [3] + 0.05)
+                bounding_rectangle["Westernmost_Longitude"] = str(bound_box_coordinates [0] - 0.05)
+                bounding_rectangle["Easternmost_Longitude"] = str(bound_box_coordinates [1] + 0.05)
+                log.debug(bounding_rectangle)
+                dif_metadata_dict['Spatial_Coverage']['Geometry']['Bounding_Rectangle'] = bounding_rectangle
+        
+#             geographic_element = collections.OrderedDict()
+#             if spatial.get('type') == 'Point':
+#                  gml_id_index += 1
+#                  point_id = 'P' + "%03d" % (gml_id_index,)
+#                  coordinates = []
+#                  for coordinate in spatial.get('coordinates',[]):
+#                      coordinates += [str(coordinate)]
+#                  point_element = {'@gml:id':point_id, 'gml:pos': ' '.join(coordinates)}
+#                  geographic_element = {'gmd:EX_BoundingPolygon':{'gmd:polygon':{'gml:Point':point_element}}} 
+#             elif spatial.get('type') == 'MultiPoint':
+#                  gml_id_index += 1
+#                  multi_point_id = 'MP' + "%03d" % (gml_id_index,)
+#                  multi_point_element = {'@gml:id':multi_point_id, 'gml:pointMember':[]}
+#                  for coordinate_pair in spatial.get('coordinates',[]):
+#                      gml_id_index += 1
+#                      point_id = 'P' + "%03d" % (gml_id_index,)
+#                      coordinates = ' '.join([str(coordinate_pair[0]), str(coordinate_pair[1])]) 
+#                      point_element = {'gml:Point':{'@gml:id':point_id, 'gml:pos': coordinates}}
+#                      multi_point_element ['gml:pointMember'] += [point_element]
+#                  geographic_element = {'gmd:EX_BoundingPolygon':{'gmd:polygon':{'gml:MultiPoint':multi_point_element}}} 
+#             else:
+#                  coordinates = spatial.get('coordinates',[])[0]
+#                  if self.is_a_box(coordinates):
+#                      bounding_box =collections.OrderedDict()
+#                      bounding_box['gmd:westBoundLongitude'] = {'gco:Decimal':str(min(coordinates[0][0], coordinates[2][0]))}
+#                      bounding_box['gmd:eastBoundLongitude'] = {'gco:Decimal':str(max(coordinates[0][0], coordinates[2][0]))}
+#                      bounding_box['gmd:southBoundLatitude'] = {'gco:Decimal':str(min(coordinates[0][1], coordinates[2][1]))}
+#                      bounding_box['gmd:northBoundLatitude'] = {'gco:Decimal':str(max(coordinates[0][1], coordinates[2][1]))}
+#                      geographic_element = {'gmd:EX_GeographicBoundingBox':bounding_box} 
+#                  else:
+#                      gml_id_index += 1
+#                      polygon_id = 'PL' + "%03d" % (gml_id_index,)
+#                      pos_list = []
+#                      for coordinate_pair in coordinates:
+#                          coordinates = ' '.join([str(coordinate_pair[0]), str(coordinate_pair[1])]) 
+#                          pos_list += [coordinates]
+#                      polygon_element = {'@gml:id':polygon_id, 'gml:interior':{'gml:LinearRing':{'gml:pos': pos_list}}}
+#                      geographic_element = {'gmd:EX_BoundingPolygon':{'gmd:polygon':{'gml:Polygon':polygon_element}}}       
+         
+        ### <xs:element name="Point" type="Point"/>
+        ### <xs:element name="Polygon" type="GPolygon"/>
+        
+        
         ## <xs:element name="Orbit_Parameters" type="OrbitParameters" minOccurs="0"/>
         ## <xs:element name="Vertical_Spatial_Info" type="VerticalSpatialInfo" minOccurs="0" maxOccurs="unbounded"/>
         ## <xs:element name="Spatial_Info" type="SpatialInfo" minOccurs="0"/>
 
         #<xs:element name="Location" type="LocationType" minOccurs="0" maxOccurs="unbounded"/>
+        # TODO: Cannot know type, could be set to CONTINENT type and then Europe (?)
         #<xs:element name="Data_Resolution" type="DataResolutionType" minOccurs="0" maxOccurs="unbounded"/>
 
         # Project (M)
         dif_metadata_dict['Project'] = {'Short_Name':'Not provided'}
 
         #<xs:element name="Quality" type="QualityType" minOccurs="0"/>
-        #<xs:element name="Access_Constraints" type="AccessConstraintsType" minOccurs="0"/>
-        #<xs:element name="Use_Constraints" type="UseConstraintsType" minOccurs="0"/>
-        #<xs:element name="Dataset_Language" type="DatasetLanguageType" minOccurs="0" maxOccurs="unbounded"/>
-        #<xs:element name="Originating_Center" type="OriginatingCenterType" minOccurs="0"/>
+        dif_metadata_dict['Access_Constraints'] = 'Public access to the data'
         
+        dataset_restrictions = self._get_resource_restrictions(dataset_dict)
+        if "registered" in dataset_restrictions:
+            dif_metadata_dict['Access_Constraints'] = 'Registration is required to access the data'
+        elif ("any_organization" in dataset_restrictions) \
+          or ("same_organization" in dataset_restrictions) \
+          or ("only_allowed_users" in dataset_restrictions):
+            dif_metadata_dict['Access_Constraints'] = 'Access to the data upon request'
+ 
+        # "Use_Constraints"
+        license = dataset_dict.get('license_title', 'Open Data Commons Open Database License (ODbL)')
+        license_url = dataset_dict.get('license_url', 'http://www.opendefinition.org/licenses/odc-odbl')
+        dif_metadata_dict['Use_Constraints'] = 'Usage constraintes defined by the license "' + license.strip() + '", see ' + license_url
+        
+        # Dataset_Language
+        dif_metadata_dict['Dataset_Language'] = self._get_dif_language_code(dataset_dict.get('language', 'en'))
+
+        # "Originating_Center"
+        dif_metadata_dict['Originating_Center'] = dataset_dict.get('organization', {}).get('title','')
+
         # Organization (M) (I put WSL, we should think about adding
         dif_metadata_dict['Organization'] = collections.OrderedDict()
         ## "Organization_Type" * DISTRIBUTOR/ARCHIVER/ORIGINATOR/PROCESSOR
@@ -182,7 +272,7 @@ class GcmdDifConverter(BaseConverter):
         
         ## <xs:element name="Hours_Of_Service" type="xs:string" minOccurs="0"/>
         ## <xs:element name="Instructions" type="xs:string" minOccurs="0"/>
-        ## <xs:element name="Organization_URL" type="xs:string" minOccurs="0"/>
+        ##  "Organization_URL"
         dif_metadata_dict['Organization']['Organization_URL']= 'https://www.wsl.ch'
         
         ## <xs:element name="Dataset_ID" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
@@ -190,25 +280,28 @@ class GcmdDifConverter(BaseConverter):
         dif_metadata_dict['Organization']['Personnel'] = collections.OrderedDict()
         dif_metadata_dict['Organization']['Personnel']['Role'] = 'DATA CENTER CONTACT'
         dif_metadata_dict['Organization']['Personnel']['Contact_Group'] = collections.OrderedDict()
-
         dif_metadata_dict['Organization']['Personnel']['Contact_Group']["Name"] = 'EnviDat'
         dif_metadata_dict['Organization']['Personnel']['Contact_Group']["Email"] = 'envidat@wsl.ch'
         
         #<xs:element name="Distribution" type="DistributionType" minOccurs="0" maxOccurs="unbounded"/>
         #<xs:element name="Multimedia_Sample" type="MultimediaSampleType" minOccurs="0" maxOccurs="unbounded"/>
-        #<xs:element name="Reference" type="ReferenceType" minOccurs="0" maxOccurs="unbounded"/>
         
+        #<xs:element name="Reference" type="ReferenceType" minOccurs="0" maxOccurs="unbounded"/>
+        # TODO: find paper citation in the description and parse it to this element
+              
         # Summary (M)
         dif_metadata_dict['Summary'] = collections.OrderedDict()
         ## Abstract
         dif_metadata_dict['Summary']['Abstract'] = dataset_dict.get('notes','').replace('\n', ' ').replace('\r', ' ')
-        ## "Purpose" TODO: get from extras as in ISO
-        
+        ## "Purpose"
+        purpose = self._get_ignore_case(extras_dict, 'purpose')
+        if purpose:
+            dif_metadata_dict['Summary']['Purpose'] = self._get_or_missing(extras_dict, 'purpose', ignore_case=True)
+
         # Related_URL (M)*
         dif_metadata_dict['Related_URL'] = {'URL':package_url}
 
         #<xs:element name="Metadata_Association" type="MetadataAssociationType" minOccurs="0" maxOccurs="unbounded"/>
-        #   <!-- Added from UMM (ECHO) -->
         #<xs:element name="IDN_Node" type="IDNNodeType" minOccurs="0" maxOccurs="unbounded"/>
         #<xs:element name="Originating_Metadata_Node" type="OriginatingMetadataNodeType" minOccurs="0"/>
         
@@ -230,13 +323,28 @@ class GcmdDifConverter(BaseConverter):
         dif_metadata_dict['Metadata_Dates']["Data_Creation"] = metadata_created
         dif_metadata_dict['Metadata_Dates']["Data_Last_Revision"] = metadata_modified
 
-        #<xs:element name="Private" type="PrivateType" minOccurs="0"/>
-        #<xs:element name="Additional_Attributes" type="AdditionalAttributesType" minOccurs="0" maxOccurs="unbounded"/>
+        # "Private"
+        if dataset_dict.get('private',False):
+            dif_metadata_dict['Private'] = 'True'
+        else:
+            dif_metadata_dict['Private'] = 'False'
+
+        # "Additional_Attributes"
+        # Maybe the authors should go here
+        
         #<xs:element name="Product_Level_Id" type="ProcessingLevelIdType" minOccurs="0"/>
         #<xs:element name="Collection_Data_Type" type="CollectionDataTypeEnum" minOccurs="0" maxOccurs="unbounded"/>
         #<xs:element name="Product_Flag" type="ProductFlagEnum" minOccurs="0"/>
-        #<xs:element name="Extended_Metadata" type="ExtendedMetadataType" minOccurs="0" maxOccurs="unbounded"/>
- 
+        
+        # "Extended_Metadata"
+        extended_metadata = []
+        for key in extras_dict:
+            if key.lower() not in dif_extras:
+                value = dif_extras[key]
+                extended_metadata += [{'Name': key, 'Value': value, 'Type': 'text' }]
+        if len(extended_metadata)>0:
+            dif_metadata_dict['Extended_Metadata'] = {'Metadata': extended_metadata}
+                
         # Root element
         gcmd_dif_dict = collections.OrderedDict()
         gcmd_dif_dict['DIF'] = dif_metadata_dict
@@ -247,7 +355,7 @@ class GcmdDifConverter(BaseConverter):
         return converted_package
     
     # extract keywords from tags
-    def get_keywords(self, data_dict):
+    def _get_keywords(self, data_dict):
         keywords = []
         for tag in data_dict.get('tags',[]):
             name = tag.get('display_name', '').upper()
@@ -255,7 +363,7 @@ class GcmdDifConverter(BaseConverter):
         return keywords
     
     # guess keywords from organization
-    def get_science_keywords(self, data_dict, extras_dict):
+    def _get_science_keywords(self, data_dict, extras_dict):
         default_keywords = ['EARTH SCIENCE', 'LAND SURFACE', 'ENVIRONMENT']
         
         # check if defined in extras, comma-separated
@@ -271,37 +379,37 @@ class GcmdDifConverter(BaseConverter):
         #                  SPECTRAL/ENGINEERING, SUN-EARTH INTERACTIONS, TERRESTRIAL HYDROSPHERE
         organizations_keywords_dict = {
             "biodiversity-and-conservation-biology":['EARTH SCIENCE', 'BIOSPHERE', 'BIODIVERSITY'],
-			"cces":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"clench":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"community-ecology":['EARTH SCIENCE', 'BIOSPHERE', 'ECOLOGY'],
-			"conservation-biology":['EARTH SCIENCE', 'BIOSPHERE', 'BIOLOGY'],
-			"cryos":['EARTH SCIENCE', 'CRYOSPHERE', 'SNOW'],
-			"d-baug":['EARTH SCIENCE', 'SPECTRAL/ENGINEERING', 'ENVIRONMENT'],
-			"usys":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"dynamic-macroecology":['EARTH SCIENCE', 'BIOSPHERE', 'MACROECOLOGY'],
-			"ecosystems-dynamics":['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS'],
-			"epfl":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"ethz":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"feh":['EARTH SCIENCE', 'AGRICULTURE', 'ENVIRONMENT'],
-			"forema":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
-			"forest-dynamics":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
-			"forest-soils-and-biogeochemistry":['EARTH SCIENCE', 'SOLID EARTH', 'BIOGEOCHEMISTRY'],
-			"gebirgshydrologie":['EARTH SCIENCE', 'LAND SURFACE', 'HYDROLOGY'],
-			"gis":['EARTH SCIENCE', 'LAND SURFACE', 'GIS'],
-			"hazri":['EARTH SCIENCE', 'SOLID EARTH', 'NATURAL HAZARDS'],
-			"ibp":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"landscape-dynamics":['EARTH SCIENCE', 'LAND SURFACE', 'LANDSCAPE'],
-			"lwf":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"mountain-ecosystems":['EARTH SCIENCE', 'BIOSPHERE', 'MOUNTAIN ECOSYSTEMS'],
-			"nfi":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
-			"plant-animal-interactions":['EARTH SCIENCE', 'BIOSPHERE', 'INTERACTIONS'],
-			"remote-sensing":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
-			"resource-analysis":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST RESOURCES'],
-			"slf":['EARTH SCIENCE', 'CRYOSPHERE', 'SNOW'],
-			"stand-dynamics-and-silviculture":['EARTH SCIENCE', 'BIOSPHERE', 'SILVICULTURE'],
-			"swissforestlab-swissfl":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
-			"vaw":['EARTH SCIENCE', 'TERRESTRIAL HYDROSPHERE', 'GLACIOLOGY'],
-			"wsl":['EARTH SCIENCE', 'LAND SURFACE', 'LANDSCAPE']
+            "cces":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+            "clench":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+            "community-ecology":['EARTH SCIENCE', 'BIOSPHERE', 'ECOLOGY'],
+            "conservation-biology":['EARTH SCIENCE', 'BIOSPHERE', 'BIOLOGY'],
+            "cryos":['EARTH SCIENCE', 'CRYOSPHERE', 'SNOW'],
+            "d-baug":['EARTH SCIENCE', 'SPECTRAL/ENGINEERING', 'ENVIRONMENT'],
+            "usys":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+            "dynamic-macroecology":['EARTH SCIENCE', 'BIOSPHERE', 'MACROECOLOGY'],
+            "ecosystems-dynamics":['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS'],
+            "epfl":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+            "ethz":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+            "feh":['EARTH SCIENCE', 'AGRICULTURE', 'ENVIRONMENT'],
+            "forema":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
+            "forest-dynamics":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
+            "forest-soils-and-biogeochemistry":['EARTH SCIENCE', 'SOLID EARTH', 'BIOGEOCHEMISTRY'],
+            "gebirgshydrologie":['EARTH SCIENCE', 'LAND SURFACE', 'HYDROLOGY'],
+            "gis":['EARTH SCIENCE', 'LAND SURFACE', 'GIS'],
+            "hazri":['EARTH SCIENCE', 'SOLID EARTH', 'NATURAL HAZARDS'],
+            "ibp":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+            "landscape-dynamics":['EARTH SCIENCE', 'LAND SURFACE', 'LANDSCAPE'],
+            "lwf":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+            "mountain-ecosystems":['EARTH SCIENCE', 'BIOSPHERE', 'MOUNTAIN ECOSYSTEMS'],
+            "nfi":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
+            "plant-animal-interactions":['EARTH SCIENCE', 'BIOSPHERE', 'INTERACTIONS'],
+            "remote-sensing":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ENVIRONMENT'],
+            "resource-analysis":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST RESOURCES'],
+            "slf":['EARTH SCIENCE', 'CRYOSPHERE', 'SNOW'],
+            "stand-dynamics-and-silviculture":['EARTH SCIENCE', 'BIOSPHERE', 'SILVICULTURE'],
+            "swissforestlab-swissfl":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST'],
+            "vaw":['EARTH SCIENCE', 'TERRESTRIAL HYDROSPHERE', 'GLACIOLOGY'],
+            "wsl":['EARTH SCIENCE', 'LAND SURFACE', 'LANDSCAPE']
         }
         science_keywords = organizations_keywords_dict.get(dataset_organization, default_keywords)
         
@@ -327,3 +435,42 @@ class GcmdDifConverter(BaseConverter):
         for extra in extras:
             extras_dict[extra.get('key')] = extra.get('value')
         return extras_dict
+
+    # get resource formats
+    def _get_resource_formats(self, dataset_dict):
+        resource_formats = []
+        for resource in dataset_dict.get('resources', []):
+            resource_format = resource.get('format', resource.get('mimetype', resource.get('mimetype_inner', '')))
+            if resource_format:
+                resource_format = resource_format.lower()
+                if resource_format not in resource_formats:
+                    resource_formats += [resource_format]
+        return resource_formats
+
+    # get resource restrictions
+    def _get_resource_restrictions(self, dataset_dict):
+        resource_restrictions = []
+        for resource in dataset_dict.get('resources', []):
+            try:
+                restricted = json.loads(resource.get('restricted'))
+            except:
+                restricted = {}
+            resource_restriction = restricted.get('level','')
+            if resource_restriction:
+                resource_restriction = resource_restriction.lower()
+                if resource_restriction not in resource_restrictions:
+                    resource_restrictions += [resource_restriction]
+        return resource_restrictions
+
+    # translate to full word codehttps://gcmd.nasa.gov/DocumentBuilder/defaultDif10/guide/data_set_language.html
+    # Values: English; Afrikaans; Arabic; Bosnia; Bulgarian; Chinese; Croation; Czech; Danish; Dutch; Estonian; 
+    # Finnish; French; German; Hebrew; Hungarian; Indonesian; Italian; Japanese; Korean; Latvian; Lithuanian; Norwegian; 
+    # Polish; Portuguese; Romanian; Russian; Slovak; Spanish; Ukrainian; Vietnamese
+    def _get_dif_language_code(self, code):
+        lookup_dict = {'en':'English','de':'German','it':'Italian','fr':'French'} #, 'ro':'roh'}        
+        return lookup_dict.get(code, 'en').title()
+        
+    def _get_bounding_rectangle(self, coordinates):
+        longitude_coords = coordinates[0:][::2]                   
+        latitude_coords = coordinates[1:][::2]  
+        return([min(longitude_coords),max(longitude_coords), min(latitude_coords), max(latitude_coords)])
