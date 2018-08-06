@@ -323,7 +323,11 @@ class GcmdDifConverter(BaseConverter):
         for key in extras_dict:
             if key.lower() not in dif_extras:
                 value = extras_dict[key]
-                extended_metadata += [{'Name': key, 'Value': value, 'Type': 'text' }]
+                metadata = collections.OrderedDict()
+                metadata['Name'] = key
+                metadata['Type'] = 'text'
+                metadata['Value'] = value
+                extended_metadata += [metadata]
         if len(extended_metadata)>0:
             dif_metadata_dict['Extended_Metadata'] = {'Metadata': extended_metadata}
                 
