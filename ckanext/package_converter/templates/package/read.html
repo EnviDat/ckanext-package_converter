@@ -3,8 +3,8 @@
 {% block package_description %}
   {{ super() }}
 
-   <a href="{{ h.url_for('package_export', package_id=pkg.name, file_format='datacite', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' Get DataCite XML')}}</a>
-   <a href="{{ h.url_for('package_export', package_id=pkg.name, file_format='iso19139', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' Get ISO 19139 XML')}}</a>
-   <a href="{{ h.url_for('package_export', package_id=pkg.name, file_format='gcmd_dif', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' Get GCMD DIF XML')}}</a>
+   <a href="{{ h.url_for('package_export', package_id=pkg.name, file_format='datacite', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' DataCite ')}}</a>
+   <a href="{{ h.url_for('package_export', package_id=pkg.name, file_format='iso19139', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' ISO 19139 ')}}</a>
+   <a href="{{ h.url_for('package_export', package_id=pkg.name, file_format='gcmd_dif', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' GCMD DIF ')}}</a>
 
 {% endblock %}

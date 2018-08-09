@@ -77,8 +77,23 @@ class GcmdDifConverter(BaseConverter):
         
         # Dataset_Citation (O)*
         dif_metadata_dict['Dataset_Citation'] = collections.OrderedDict()
-        ## "Dataset_Creator" organization?
-        ## "Dataset_Editor" maintainer?
+        ## "Dataset_Creator" organization
+        author_names = []
+        try:
+            for author in json.loads(dataset_dict.get('author', '[]')):
+                author_names += [author.get('name','')]
+        except:
+            pass
+        
+        if author_names:
+            dif_metadata_dict['Dataset_Citation']['Dataset_Creator'] = ','.join(author_names)
+        
+        ## "Dataset_Editor" maintainer
+        try:
+            maintainer_name = json.loads(dataset_dict.get('maintainer', '{}')).get('name','')
+            dif_metadata_dict['Dataset_Citation']['Dataset_Editor'] = maintainer_name
+        except:
+            pass
         
         ## "Dataset_Title" 
         dif_metadata_dict['Dataset_Citation']['Dataset_Title'] = dataset_dict.get('title', '')
