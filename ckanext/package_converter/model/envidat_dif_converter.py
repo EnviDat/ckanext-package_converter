@@ -36,7 +36,7 @@ class GcmdDifConverter(BaseConverter):
             # fix issue with dif included XSD
             current_url = helpers.full_current_url()
             site_url = current_url.split('//',3)[0] + '//' + current_url.split('://',1)[1].split('/',1)[0]
-            log.debug(" **** Validating record..." + str(converted_record.validate(custom_replace=[('xs:include schemaLocation="U', 'xs:include schemaLocation="'+ site_url +'/package_converter_xsd/U')])) + ' ****')
+            #log.debug(" **** Validating record..." + str(converted_record.validate(custom_replace=[('xs:include schemaLocation="U', 'xs:include schemaLocation="'+ site_url +'/package_converter_xsd/U')])) + ' ****')
             return converted_record
         else:
             raise TypeError(('Converter is not compatible with the record format {record_format}({record_version}). ' +
@@ -86,7 +86,7 @@ class GcmdDifConverter(BaseConverter):
             pass
         
         if author_names:
-            dif_metadata_dict['Dataset_Citation']['Dataset_Creator'] = ','.join(author_names)
+            dif_metadata_dict['Dataset_Citation']['Dataset_Creator'] = ', '.join(author_names)
         
         ## "Dataset_Editor" maintainer
         try:
