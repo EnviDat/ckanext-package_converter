@@ -205,7 +205,7 @@ class Datacite31SchemingConverter(SchemingConverter):
             datacite_creator['creatorName'] = ckan_creator.get(self._joinTags([datacite_creator_tag, 'creatorName']), '')
             if ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier']), False):
                 datacite_creator['nameIdentifier'] = { '#text': ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier']), ''),
-                                                       '@nameIdentifierScheme':  ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier', 'nameIdentifierScheme']), '').upper() }
+                                                       '@nameIdentifierScheme':  ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier', 'nameIdentifierScheme']), 'orcid').upper() }
             datacite_creator['affiliation'] = ckan_creator.get(self._joinTags([datacite_creator_tag, 'affiliation']), '')
             datacite_dict['resource'][datacite_creators_tag][datacite_creator_tag] += [ datacite_creator ]
 
