@@ -219,6 +219,8 @@ class GcmdDifConverter(BaseConverter):
                          point['Point_Longitude'] = str(coordinate_pair[0])
                          point['Point_Latitude'] = str(coordinate_pair[1])
                          points += [point]
+                     if len(points)>1:
+                         points.pop()
                      dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon'] = collections.OrderedDict()
                      dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon']['Boundary'] = {'Point': points}
                      dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon']['Center_Point'] = copy.deepcopy(dif_metadata_dict['Spatial_Coverage']['Geometry']['Bounding_Rectangle']['Center_Point'])
@@ -340,7 +342,7 @@ class GcmdDifConverter(BaseConverter):
                 value = extras_dict[key]
                 metadata = collections.OrderedDict()
                 metadata['Name'] = key
-                metadata['Type'] = 'text'
+                metadata['Type'] = 'String'
                 metadata['Value'] = value
                 extended_metadata += [metadata]
         if len(extended_metadata)>0:
