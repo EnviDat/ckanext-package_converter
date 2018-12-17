@@ -470,8 +470,9 @@ class GcmdDifConverter(BaseConverter):
     # Finnish; French; German; Hebrew; Hungarian; Indonesian; Italian; Japanese; Korean; Latvian; Lithuanian; Norwegian; 
     # Polish; Portuguese; Romanian; Russian; Slovak; Spanish; Ukrainian; Vietnamese
     def _get_dif_language_code(self, code):
+        lang_code = code.lower()[:2]
         lookup_dict = {'en':'English','de':'German','it':'Italian','fr':'French'} #, 'ro':'roh'}        
-        return lookup_dict.get(code, 'en').title()
+        return lookup_dict.get(lang_code, 'English').title()
         
     def _get_bounding_rectangle(self, coordinates):
         flatten_coordinates = coordinates
