@@ -189,12 +189,12 @@ class GcmdDifConverter(BaseConverter):
                 bounding_rectangle = collections.OrderedDict()
                 bound_box_coordinates = self._get_bounding_rectangle(spatial.get('coordinates',[]))
                 bounding_rectangle["Center_Point"] = collections.OrderedDict()
-                bounding_rectangle["Center_Point"]["Point_Latitude"] = str((bound_box_coordinates[3] + bound_box_coordinates[2])/2.0)
                 bounding_rectangle["Center_Point"]["Point_Longitude"] = str((bound_box_coordinates[1] + bound_box_coordinates[0])/2.0)
-                bounding_rectangle["Southernmost_Latitude"] = str(max(bound_box_coordinates[2], -90))
-                bounding_rectangle["Northernmost_Latitude"] = str(min(bound_box_coordinates[3],  90))
+                bounding_rectangle["Center_Point"]["Point_Latitude"] = str((bound_box_coordinates[3] + bound_box_coordinates[2])/2.0)
                 bounding_rectangle["Westernmost_Longitude"] = str(max(bound_box_coordinates[0],   0))
                 bounding_rectangle["Easternmost_Longitude"] = str(min(bound_box_coordinates[1],  180))
+                bounding_rectangle["Southernmost_Latitude"] = str(max(bound_box_coordinates[2], -90))
+                bounding_rectangle["Northernmost_Latitude"] = str(min(bound_box_coordinates[3],  90))
                 dif_metadata_dict['Spatial_Coverage']['Geometry']['Bounding_Rectangle'] = bounding_rectangle        
                 
                 ### <xs:element name="Point" type="Point"/>
