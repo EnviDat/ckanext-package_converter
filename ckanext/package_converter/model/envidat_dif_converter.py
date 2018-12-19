@@ -487,7 +487,7 @@ class GcmdDifConverter(BaseConverter):
         latitude_coords = flatten_coordinates[1:][::2]  
         return([min(longitude_coords),max(longitude_coords), min(latitude_coords), max(latitude_coords)])
     
-    def _is_counter_clockwise(points):
+    def _is_counter_clockwise(self, points):
         
         if len(points)<3:
             return False
