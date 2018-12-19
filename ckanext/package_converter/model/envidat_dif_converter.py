@@ -10,6 +10,7 @@ from ckanext.package_converter.model.record import Record, JSONRecord, XMLRecord
 import collections
 from xmltodict import unparse
 import json
+import sys
 
 from dateutil.parser import parse
 import string
@@ -492,21 +493,27 @@ class GcmdDifConverter(BaseConverter):
         if len(points)<3:
             return False
         
-        akku = 0
-        print(points)
-        
-        for i in range(len(points)):
-            p1 = points[i]         
-            p2 = points[0]
+        try:
+            akku = 0
+            print(points)
+         
+            for i in range(len(points)):
+                p1 = points[i]         
+                p2 = points[0]
                
-            if i+1 < len(points):
-                p2 = points[i+1]
+                if i+1 < len(points):
+                    p2 = points[i+1]
+                
+                print(akku)
+                akku += (float(p2['Point_Longitude']) - float(p1['Point_Longitude']))*(float(p2['Point_Latitude']) + float(p1['Point_Latitude']))
             print(akku)
-            akku += (p2['Point_Longitude'] - p1['Point_Longitude'])*(p2['Point_Latitude'] + p1['Point_Latitude'])
-        print(akku)
-        if akku >= 0:
-            return False  
-        else:
-            return True      
+            if akku >= 0:
+                return False  
+            else:
+                return True 
+        except:
+            log.error("Unexpected error converting to float (_is_counter_clockwise):", sys.exc_info()[0])  
+        
+        return False   
 
         
