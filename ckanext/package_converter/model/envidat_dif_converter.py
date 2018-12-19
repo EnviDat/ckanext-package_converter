@@ -218,9 +218,14 @@ class GcmdDifConverter(BaseConverter):
                          point = collections.OrderedDict()
                          point['Point_Longitude'] = str(coordinate_pair[0])
                          point['Point_Latitude'] = str(coordinate_pair[1])
-                         points = [point] + points
+                         points += [point]
                      if len(points)>1:
                          points.pop()
+                     
+                     if self._is_counter_clockwise(points):
+                         print("Conterclockwise REVERSing!!")
+                         points.reverse()
+
                      dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon'] = collections.OrderedDict()
                      dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon']['Boundary'] = {'Point': points}
                      dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon']['Center_Point'] = copy.deepcopy(dif_metadata_dict['Spatial_Coverage']['Geometry']['Bounding_Rectangle']['Center_Point'])
@@ -481,3 +486,27 @@ class GcmdDifConverter(BaseConverter):
         longitude_coords = flatten_coordinates[0:][::2]                   
         latitude_coords = flatten_coordinates[1:][::2]  
         return([min(longitude_coords),max(longitude_coords), min(latitude_coords), max(latitude_coords)])
+    
+    def _is_counter_clockwise(points):
+        
+        if len(points)<3:
+            return False
+        
+        akku = 0
+        print(points)
+        
+        for i in range(len(points)):
+            p1 = points[i]         
+            p2 = points[0]
+               
+            if i+1 < len(points):
+                p2 = points[i+1]
+            print(akku)
+            akku += (p2['Point_Longitude'] - p1['Point_Longitude'])*(p2['Point_Latitude'] + p1['Point_Latitude'])
+        print(akku)
+        if akku >= 0:
+            return False  
+        else:
+            return True      
+
+        
