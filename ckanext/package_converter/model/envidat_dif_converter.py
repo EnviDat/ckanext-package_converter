@@ -224,8 +224,10 @@ class GcmdDifConverter(BaseConverter):
                          points.pop()
                      
                      if self._is_counter_clockwise(points):
-                         print("Conterclockwise REVERSing!!")
+                         log.debug(dataset_dict.get('name', '') + " ** Counterclockwise REVERSING!! **")
                          points.reverse()
+                     else:
+                         log.debug(dataset_dict.get('name', '') + " Clockwise OK")                     
 
                      dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon'] = collections.OrderedDict()
                      dif_metadata_dict['Spatial_Coverage']['Geometry']['Polygon']['Boundary'] = {'Point': points}
@@ -495,7 +497,6 @@ class GcmdDifConverter(BaseConverter):
         
         try:
             akku = 0
-            print(points)
          
             for i in range(len(points)):
                 p1 = points[i]         
@@ -504,9 +505,8 @@ class GcmdDifConverter(BaseConverter):
                 if i+1 < len(points):
                     p2 = points[i+1]
                 
-                print(akku)
                 akku += (float(p2['Point_Longitude']) - float(p1['Point_Longitude']))*(float(p2['Point_Latitude']) + float(p1['Point_Latitude']))
-            print(akku)
+
             if akku >= 0:
                 return False  
             else:
