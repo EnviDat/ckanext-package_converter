@@ -149,6 +149,9 @@ class Iso19139Converter(BaseConverter):
         
         # purpose (only in extras)
         purpose = self._get_ignore_case(extras_dict, 'purpose')
+        if not purpose:
+            purpose = self._get_ignore_case(extras_dict, 'CUSTOM_PURPOSE')
+            
         if purpose:
             md_data_id['gmd:purpose'] = self._get_or_missing(extras_dict, 'purpose', ignore_case=True)
         # status (only in extras)
