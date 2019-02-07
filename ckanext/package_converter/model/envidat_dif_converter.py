@@ -375,7 +375,7 @@ class GcmdDifConverter(BaseConverter):
     
     # guess keywords from organization
     def _get_science_keywords(self, data_dict, extras_dict):
-        default_keywords = ['EARTH SCIENCE', 'LAND SURFACE', 'ENVIRONMENT']
+        default_keywords = ['EARTH SCIENCE', 'CLIMATE INDICATORS', 'LAND SURFACE/AGRICULTURE INDICATORS']
         
         # check if defined in extras, comma-separated
         custom_keywords = self._get_ignore_case(extras_dict, 'science_keywords').upper().split(',')
@@ -389,38 +389,38 @@ class GcmdDifConverter(BaseConverter):
         #                  CRYOSPHERE, HUMAN DIMENSIONS, LAND SURFACE, OCEANS, PALEOCLIMATE, SOLID EARTH, 
         #                  SPECTRAL/ENGINEERING, SUN-EARTH INTERACTIONS, TERRESTRIAL HYDROSPHERE
         organizations_keywords_dict = {
-            "biodiversity-and-conservation-biology":['EARTH SCIENCE', 'BIOSPHERE', 'BIODIVERSITY'],
-            "cces":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
-            "clench":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
-            "community-ecology":['EARTH SCIENCE', 'BIOSPHERE', 'ECOLOGY'],
-            "conservation-biology":['EARTH SCIENCE', 'BIOSPHERE', 'BIOLOGY'],
-            "cryos":['EARTH SCIENCE', 'CRYOSPHERE', 'SNOW/ICE'],
-            "d-baug":['EARTH SCIENCE', 'SPECTRAL/ENGINEERING', 'ENVIRONMENT'],
-            "usys":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
-            "dynamic-macroecology":['EARTH SCIENCE', 'BIOSPHERE', 'MACROECOLOGY'],
-            "ecosystems-dynamics":['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS'],
-            "epfl":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
-            "ethz":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
-            "feh":['EARTH SCIENCE', 'AGRICULTURE', 'ENVIRONMENT'],
-            "forema":['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS', 'FOREST'],
-            "forest-dynamics":['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS', 'FOREST'],
-            "forest-soils-and-biogeochemistry":['EARTH SCIENCE', 'SOLID EARTH', 'BIOGEOCHEMISTRY'],
-            "gebirgshydrologie":['EARTH SCIENCE', 'TERRESTRIAL HYDROSPHERE', 'SURFACE WATER'],
-            "gis":['EARTH SCIENCE', 'LAND SURFACE', 'GIS'],
-            "hazri":['EARTH SCIENCE', 'SOLID EARTH', 'NATURAL HAZARDS'],
-            "ibp":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
-            "landscape-dynamics":['EARTH SCIENCE', 'LAND SURFACE', 'LANDSCAPE'],
-            "lwf":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
-            "mountain-ecosystems":['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS'],
-            "nfi":['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS', 'FOREST'],
-            "plant-animal-interactions":['EARTH SCIENCE', 'BIOSPHERE', 'INTERACTIONS'],
-            "remote-sensing":['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
-            "resource-analysis":['EARTH SCIENCE', 'BIOSPHERE', 'FOREST SCIENCE', 'FOREST CONSERVATION'],
-            "slf":['EARTH SCIENCE', 'CRYOSPHERE', 'SNOW/ICE'],
-            "stand-dynamics-and-silviculture":['EARTH SCIENCE', 'BIOSPHERE', 'SILVICULTURE'],
-            "swissforestlab-swissfl":['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS', 'FOREST'],
-            "vaw":['EARTH SCIENCE', 'TERRESTRIAL HYDROSPHERE', 'GLACIOLOGY'],
-            "wsl":['EARTH SCIENCE', 'LAND SURFACE', 'LANDSCAPE']
+            'biodiversity-and-conservation-biology':['EARTH SCIENCE', 'BIOSPHERE', 'ECOLOGICAL DYNAMICS', 'COMMUNITY DYNAMICS', 'BIODIVERSITY FUNCTIONS'],
+            'cces':['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
+            'clench':['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
+            'community-ecology':['EARTH SCIENCE', 'BIOSPHERE', 'ECOLOGICAL DYNAMICS', 'COMMUNITY DYNAMICS'],
+            'conservation-biology':['EARTH SCIENCE','AGRICULTURE','FOREST SCIENCE','FOREST CONSERVATION'],
+            'cryos':['EARTH SCIENCE', 'CRYOSPHERE', 'SNOW/ICE'],
+            'd-baug':['EARTH SCIENCE', 'SPECTRAL/ENGINEERING', 'PLATFORM CHARACTERISTICS'],
+            'usys':['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
+            'dynamic-macroecology':['EARTH SCIENCE', 'BIOSPHERE', 'ECOLOGICAL DYNAMICS'],
+            'ecosystems-dynamics':['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS'],
+            'epfl':['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
+            'ethz':['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
+            'feh':['EARTH SCIENCE', 'AGRICULTURE', 'FOOD SCIENCE'],
+            'forema':['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS', 'FOREST'],
+            'forest-dynamics':['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS', 'FORESTS'],
+            'forest-soils-and-biogeochemistry':['EARTH SCIENCE', 'LAND SURFACE', 'SOILS'],
+            'gebirgshydrologie':['EARTH SCIENCE', 'TERRESTRIAL HYDROSPHERE', 'SURFACE WATER'],
+            'gis':['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS' 'ANTHROPOGENIC/HUMAN INFLUENCED ECOSYSTEMS'],
+            'hazri':['EARTH SCIENCE', 'SOLID EARTH', 'NATURAL HAZARDS'],
+            'ibp':['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
+            'landscape-dynamics':['EARTH SCIENCE', 'LAND SURFACE', 'LANDSCAPE'],
+            'lwf':['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
+            'mountain-ecosystems':['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS'],
+            'nfi':['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS', 'FORESTS'],
+            'plant-animal-interactions':['EARTH SCIENCE', 'BIOSPHERE', 'ECOLOGICAL DYNAMICS', 'SPECIES/POPULATION INTERACTIONS'],
+            'remote-sensing':['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
+            'resource-analysis':['EARTH SCIENCE', 'BIOSPHERE', 'FOREST SCIENCE', 'FOREST CONSERVATION'],
+            'slf':['EARTH SCIENCE', 'CRYOSPHERE', 'SNOW/ICE'],
+            'stand-dynamics-and-silviculture':['EARTH SCIENCE', 'BIOSPHERE', 'SILVICULTURE'],
+            'swissforestlab-swissfl':['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS', 'FORESTS'],
+            'vaw':['EARTH SCIENCE', 'TERRESTRIAL HYDROSPHERE', 'GLACIERS/ICE SHEETS'],
+            'wsl':['EARTH SCIENCE', 'CLIMATE INDICATORS', 'LAND SURFACE/AGRICULTURE INDICATORS']
         }
         
         science_keywords = organizations_keywords_dict.get(dataset_organization, default_keywords)
