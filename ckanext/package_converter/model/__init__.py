@@ -33,6 +33,9 @@ MetadataFormats().add_metadata_format(XMLMetadataFormat('gcmd_dif', '10.2', 'htt
                                              namespace='http://gcmd.gsfc.nasa.gov/Aboutus/xml/dif/',
                                              description='Global Change Master Directory Directory Interchange Format (GCMD DIF)'))
 
+MetadataFormats().add_metadata_format(MetadataFormat('bibtex', '', format_type=FormatType.TEXT,  file_extension='bib', 
+                                               description='Format used to describe and process lists of references'))
+
 # Add Converters
 datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite_v.3.1_to_oai_dc_v2.0.xsl'
 datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_dc_xsl_relative_path)
