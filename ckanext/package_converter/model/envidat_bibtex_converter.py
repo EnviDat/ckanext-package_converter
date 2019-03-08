@@ -73,6 +73,13 @@ class BibtexConverter(BaseConverter):
         if doi:
             converted_package += u',\n\t DOI = "http://dx.doi.org/{0}"'.format(doi)
         
+        # url
+        # dataset url as information
+        protocol, host = helpers.get_site_protocol_and_host()
+        url = protocol + '://' + host + toolkit.url_for(controller='package', action='read', id=dataset_dict.get('name', ''))
+        print url
+        converted_package += u',\n\t url = "' + url + '"'
+               
         # keywords (type default to theme)
         #keywords = self.get_keywords(dataset_dict)
 
