@@ -83,7 +83,10 @@ class RisConverter(BaseConverter):
         ris_list += [ u"PB  - " + publisher ]        
         
         #   LA  - en
-        language = dataset_dict.get( 'language', 'en')
+        language = dataset_dict.get( 'language', 'en').strip()
+        if len(language) <= 0:
+            language = 'en'
+        
         ris_list += [ u"LA  - " + language ]        
         
         #   ER  - 
