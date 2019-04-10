@@ -41,7 +41,14 @@ class SchemingConverter(BaseConverter):
                     if subfield.get(format_name, False):
                         format_subfield = subfield[format_name]
                         if format_field:
-                            map_dict[format_field]['subfields'][format_subfield]= {FIELD_NAME:subfield[FIELD_NAME]}
+                            if not map_dict[format_field]['subfields'].get(format_subfield, False):
+                                 map_dict[format_field]['subfields'][format_subfield] = {FIELD_NAME:subfield[FIELD_NAME]}
+                            else:
+                                 value = map_dict[format_field]['subfields'][format_subfield][FIELD_NAME]
+                                 if isinstance(value, list):
+                                     map_dict[format_field]['subfields'][format_subfield] = {FIELD_NAME:value + [subfield[FIELD_NAME]]}
+                                 else:
+                                     map_dict[format_field]['subfields'][format_subfield] = {FIELD_NAME: [value, subfield[FIELD_NAME]]}                                     
                         else:
                             map_dict[format_subfield] = {FIELD_NAME:field[FIELD_NAME] + '.' + subfield[FIELD_NAME]}
             return map_dict
@@ -93,7 +100,6 @@ class SchemingConverter(BaseConverter):
 
     def _get_complex_mapped_value(self, group_tag, element_tag, field_tags, dataset_dict, metadata_map):
         values_list = []
-
         # Simple fields
         simple_fields_object = collections.OrderedDict()
         for field in field_tags:
@@ -125,7 +131,14 @@ class SchemingConverter(BaseConverter):
                     for field in field_tags:
                         field_tag = self._joinTags([element_tag, field])
                         ckan_subfield_tag = ckan_subfields.get(field_tag, {FIELD_NAME:''})[FIELD_NAME]
-                        subfield_value = ckan_element.get(ckan_subfield_tag, '')
+                        if not isinstance(ckan_subfield_tag, list):
+                            subfield_value = ckan_element.get(ckan_subfield_tag, '')
+                        else:
+                            subfield_value = []
+                            for ckan_subfield_tag_item in ckan_subfield_tag:
+                                extra_value =  ckan_element.get(ckan_subfield_tag_item, '')
+                                if extra_value:
+                                    subfield_value += [extra_value]
                         if subfield_value:
                             composite_object[field_tag] = subfield_value
                     if composite_object:
