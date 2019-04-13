@@ -28,7 +28,7 @@ class RisConverter(BaseConverter):
     def convert(self, record):
         if self.can_convert(record):
             dataset_dict = record.get_json_dict()
-            converted_content = self._bibtex_convert_dataset(dataset_dict)
+            converted_content = self._ris_convert_dataset(dataset_dict)
             converted_record = Record(self.output_format, converted_content)
             return converted_record
         else:
@@ -38,10 +38,10 @@ class RisConverter(BaseConverter):
                                  input_format=self.get_input_format().get_format_name()))
 
     def __unicode__(self):
-        return super(BibtexConverter, self).__unicode__() + u'RIS Converter '
+        return super(RisConverter, self).__unicode__() + u'RIS Converter '
 
 
-    def _bibtex_convert_dataset(self, dataset_dict):
+    def _ris_convert_dataset(self, dataset_dict):
     
         ris_list = [ ]
     
