@@ -36,6 +36,9 @@ MetadataFormats().add_metadata_format(XMLMetadataFormat('gcmd_dif', '10.2', 'htt
 MetadataFormats().add_metadata_format(MetadataFormat('bibtex', '', format_type=FormatType.TEXT, file_extension='bib', 
                                                description='Format used to describe and process lists of references'))
 
+MetadataFormats().add_metadata_format(MetadataFormat('plain-text', '', format_type=FormatType.TEXT, file_extension='txt', 
+                                               description='Format used to provide plain human readable information'))
+
 MetadataFormats().add_metadata_format(MetadataFormat('ris', '', format_type=FormatType.TEXT, file_extension='ris', 
                                                description='Tagged format for expressing bibliographic citations'))
 
