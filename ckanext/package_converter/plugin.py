@@ -15,6 +15,7 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IRoutes, inherit=True)
+    plugins.implements(plugins.ITemplateHelpers, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
@@ -51,3 +52,13 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
             'resource_export':
                 ckanext.package_converter.logic.resource_export,
              }
+             
+    def get_helpers(self):
+        return { 'package_converter_readme_link': self.package_converter_readme_link }
+    
+    def package_converter_readme_link(self, package_dict):
+        for resource in package_dict.get('resources',[]):
+            if resource['name'] == 'README.txt':
+                return resource.get('url', None)
+        return None
+
