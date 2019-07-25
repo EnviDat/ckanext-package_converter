@@ -13,9 +13,11 @@ MetadataFormats().add_metadata_format(MetadataFormat('ckan_resource', '', format
 
 MetadataFormats().add_metadata_format(XMLMetadataFormat('datacite', '3.1', 'http://schema.datacite.org/meta/kernel-3/metadata.xsd',
                                    namespace='http://datacite.org/schema/kernel-3',
-                                   description='DataCite Metadata Format'))
-#MetadataFormats().add_metadata_format(XMLMetadataFormat('datacite', '4.0', 'https://schema.datacite.org/meta/kernel-4.0/metadata.xsd',
-#                                   description='DataCite Metadata Format'))
+                                   description='DataCite Metadata Format 3.1'))
+
+MetadataFormats().add_metadata_format(XMLMetadataFormat('datacite_4', '4.2', 'http://schema.datacite.org/meta/kernel-4.2/metadata.xsd',
+								   namespace="http://datacite.org/schema/kernel-4",
+                                   description='DataCite Metadata Format 4.2'))
 
 MetadataFormats().add_metadata_format(XMLMetadataFormat('oai_dc', '2.0', 'http://www.openarchives.org/OAI/2.0/oai_dc.xsd',
                                    namespace='http://www.openarchives.org/OAI/2.0/oai_dc/',
