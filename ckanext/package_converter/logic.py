@@ -34,7 +34,10 @@ def package_export(context, data_dict):
     :rtype: string
     '''
 
-    return(_export(data_dict, context, type='package'))
+    log.debug("Action package_export: Converting " + str(data_dict))
+    result = _export(data_dict, context, type='package')
+    return result
+
 
 
 @toolkit.side_effect_free
@@ -57,20 +60,29 @@ def resource_export(context, data_dict):
 
 
 def _export(data_dict, context, type='package'):
+
     try:
         id = data_dict['id']
     except KeyError:
         raise toolkit.ValidationError({'id': 'missing id'})
 
-    # find output format object by name
-    r = toolkit.response
-    r.content_type = 'text/html'
+    try:
+        output_format_name = data_dict['format'].lower()
+    except KeyError:
+        raise toolkit.ValidationError({'format': 'missing format'})
 
-    output_format_name = data_dict.get('format', '').lower()
+    # find output format object by name
+    try:
+        r = toolkit.response
+        r.content_type = 'text/html'
+    except:
+        log.debug("No response object")
+        r = False
 
     converted_record = export_as_record(id, output_format_name, context, type)
     try:
-        r.content_type = converted_record.get_metadata_format().get_mimetype()
+        if r:
+            r.content_type = converted_record.get_metadata_format().get_mimetype()
         converted_content = converted_record.get_content()
         return(converted_content)
     except:

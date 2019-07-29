@@ -313,7 +313,8 @@ class Datacite31SchemingConverter(SchemingConverter):
                                                                        '@' + datacite_resource_type_general_tag: datacite_resource_type_general }
 
         # Alternate Identifier (CKAN URL)
-        ckan_package_url = config.get('ckan.site_url','') + toolkit.url_for(controller='package', action='read', id=dataset_dict.get('name', ''))
+        #ckan_package_url = config.get('ckan.site_url','') + toolkit.url_for(controller='package', action='read', id=dataset_dict.get('name', ''))
+        ckan_package_url = config.get('ckan.site_url','') + '/dataset/' + dataset_dict.get('name', dataset_dict.get('id'))
         datacite_dict['resource']['alternateIdentifiers']={'alternateIdentifier':[{'#text':ckan_package_url, '@alternateIdentifierType':'URL'}]}
         # legacy
         if dataset_dict.get('url', ''):
@@ -643,7 +644,8 @@ class Datacite42SchemingConverter(SchemingConverter):
                                                                        '@' + datacite_resource_type_general_tag: datacite_resource_type_general }
 
         # Alternate Identifier (CKAN URL)
-        ckan_package_url = config.get('ckan.site_url','') + toolkit.url_for(controller='package', action='read', id=dataset_dict.get('name', ''))
+        #ckan_package_url = config.get('ckan.site_url','') + toolkit.url_for(controller='package', action='read', id=dataset_dict.get('name', ''))
+        ckan_package_url = config.get('ckan.site_url','') + '/dataset/' + dataset_dict.get('name', dataset_dict.get('id'))
         datacite_dict['resource']['alternateIdentifiers']={'alternateIdentifier':[{'#text':ckan_package_url, '@alternateIdentifierType':'URL'}]}
         # legacy
         if dataset_dict.get('url', ''):
