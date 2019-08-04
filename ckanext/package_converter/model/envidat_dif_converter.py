@@ -144,7 +144,11 @@ class GcmdDifConverter(BaseConverter):
         dif_metadata_dict['Science_Keywords']['Category'] = science_keywords[0]
         dif_metadata_dict['Science_Keywords']['Topic'] = science_keywords[1]
         dif_metadata_dict['Science_Keywords']['Term'] = science_keywords[2]
-        
+        if len(science_keywords) > 3:
+            dif_metadata_dict['Science_Keywords']['Variable_Level_1'] = science_keywords[3]
+        if len(science_keywords) > 4:
+            dif_metadata_dict['Science_Keywords']['Variable_Level_2'] = science_keywords[4] 
+
         # "ISOTopicCategoryType"
         # select from https://gcmd.nasa.gov/add/difguide/iso_topic_category.html
         dif_metadata_dict['ISO_Topic_Category'] = 'environment'
@@ -257,7 +261,9 @@ class GcmdDifConverter(BaseConverter):
             dif_metadata_dict['Access_Constraints'] = 'Access to the data upon request'
  
         # "Use_Constraints"
-        license = dataset_dict.get('license_title', 'Open Data Commons Open Database License (ODbL)')
+        license = dataset_dict.get('license_title', None)
+        if not license:
+            license = 'Open Data Commons Open Database License (ODbL)'
         license_url = dataset_dict.get('license_url', 'http://www.opendefinition.org/licenses/odc-odbl')
         dif_metadata_dict['Use_Constraints'] = 'Usage constraintes defined by the license "' + license.strip() + '", see ' + license_url
         
@@ -379,7 +385,7 @@ class GcmdDifConverter(BaseConverter):
         
         # check if defined in extras, comma-separated
         custom_keywords = self._get_ignore_case(extras_dict, 'science_keywords').upper().split(',')
-        if len(custom_keywords) == 3:
+        if len(custom_keywords) >= 3:
             return custom_keywords
 
         # map to organization (#TODO)
@@ -406,7 +412,7 @@ class GcmdDifConverter(BaseConverter):
             'forest-dynamics':['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'TERRESTRIAL ECOSYSTEMS', 'FORESTS'],
             'forest-soils-and-biogeochemistry':['EARTH SCIENCE', 'LAND SURFACE', 'SOILS'],
             'gebirgshydrologie':['EARTH SCIENCE', 'TERRESTRIAL HYDROSPHERE', 'SURFACE WATER'],
-            'gis':['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS' 'ANTHROPOGENIC/HUMAN INFLUENCED ECOSYSTEMS'],
+            'gis':['EARTH SCIENCE', 'BIOSPHERE', 'ECOSYSTEMS', 'ANTHROPOGENIC/HUMAN INFLUENCED ECOSYSTEMS'],
             'hazri':['EARTH SCIENCE', 'SOLID EARTH', 'NATURAL HAZARDS'],
             'ibp':['EARTH SCIENCE', 'CLIMATE INDICATORS', 'ATMOSPHERIC/OCEAN INDICATORS'],
             'landscape-dynamics':['EARTH SCIENCE', 'LAND SURFACE', 'LANDSCAPE'],
