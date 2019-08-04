@@ -10,7 +10,7 @@ import json
 from ckanext.scheming import helpers
 import ckan.model as model
 
-from ckanext.package_converter.model.metadata_format import MetadataFormats
+from ckanext.package_converter.model.metadata_format import MetadataFormats, FormatType
 from ckanext.package_converter.model.converter import Converters
 from ckanext.package_converter.model.record import JSONRecord
 
@@ -83,6 +83,11 @@ def _export(data_dict, context, type='package'):
     try:
         if r:
             r.content_type = converted_record.get_metadata_format().get_mimetype()
+        else:
+            # called as action
+            if converted_record.get_metadata_format().get_format_type() == FormatType.JSON:
+                log.debug("JSON format, returning dict")
+                return converted_record.get_json_dict()
         converted_content = converted_record.get_content()
         return(converted_content)
     except:

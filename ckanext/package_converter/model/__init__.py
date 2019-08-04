@@ -50,6 +50,9 @@ MetadataFormats().add_metadata_format(MetadataFormat('readme', '', format_type=F
 MetadataFormats().add_metadata_format(MetadataFormat('csv', '', format_type=FormatType.CSV, file_extension='csv', 
                                                description='Delimited text file format to store tabular data (comma-separated)'))
 
+MetadataFormats().add_metadata_format(MetadataFormat('schemaorg', '', format_type=FormatType.JSON, file_extension='jsonld', 
+                                               description='Schema.org structured information for datasets based upon W3C DCAT work'))
+
 # Add Converters
 datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite_v.3.1_to_oai_dc_v2.0.xsl'
 datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_dc_xsl_relative_path)

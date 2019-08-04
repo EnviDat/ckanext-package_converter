@@ -116,7 +116,7 @@ class XMLRecord(Record):
 class JSONRecord(Record):
     
     def __init__(self, metadata_format, json_dict):
-        Record.__init__(self, metadata_format, json.dumps(json_dict, ensure_ascii=False))
+        Record.__init__(self, metadata_format, json.dumps(json_dict, indent=4, ensure_ascii=False))
         self.json_dict = json_dict
 
     def get_json_dict(self):
