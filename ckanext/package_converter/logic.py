@@ -81,7 +81,8 @@ def _export(data_dict, context, type='package'):
 
     converted_record = export_as_record(id, output_format_name, context, type)
     try:
-        if r:
+        if r and not context.get('as_dict', False):
+            log.debug("there is a response object")
             r.content_type = converted_record.get_metadata_format().get_mimetype()
         else:
             # called as action
@@ -89,8 +90,10 @@ def _export(data_dict, context, type='package'):
                 log.debug("JSON format, returning dict")
                 return converted_record.get_json_dict()
         converted_content = converted_record.get_content()
+        log.debug("returning converted content")
         return(converted_content)
     except:
+        log.error("Exception occurred at logic._export, returning str(record)")
         return(str(converted_record))
 
 

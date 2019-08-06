@@ -69,7 +69,7 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
             try:
                 converted_package = toolkit.get_action(
                     'package_export')(
-                    {}, {'id': package_id, 'format':'schemaorg'})
+                    {'as_dict': True}, {'id': package_id, 'format':'schemaorg'})
             except toolkit.ObjectNotFound:
                 toolkit.abort(404, 'Dataset not found')
             return json.dumps(converted_package, indent=4, ensure_ascii=False)
