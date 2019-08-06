@@ -1,6 +1,6 @@
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
-
+import json
 import  ckanext.package_converter.logic
 
 from ckanext.package_converter.model.converter import Converters
@@ -54,11 +54,29 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
              }
              
     def get_helpers(self):
-        return { 'package_converter_readme_link': self.package_converter_readme_link }
+        return { 'package_converter_readme_link': self.package_converter_readme_link,
+                 'package_converter_schemaorg_json': self.package_converter_schemaorg_json}
     
     def package_converter_readme_link(self, package_dict):
         for resource in package_dict.get('resources',[]):
             if resource['name'] == 'README.txt':
                 return resource.get('url', None)
         return None
+        
+    def package_converter_schemaorg_json(self, package_id):
+        converted_package = {}
+        if package_id:
+            try:
+                converted_package = toolkit.get_action(
+                    'package_export')(
+                    {}, {'id': package_id, 'format':'schemaorg'})
+            except toolkit.ObjectNotFound:
+                toolkit.abort(404, 'Dataset not found')
+            return json.dumps(converted_package, indent=4, ensure_ascii=False)
+        else:
+            return ''
+        
+        
+        
+        
 
