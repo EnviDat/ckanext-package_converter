@@ -82,9 +82,12 @@ class ReadmeConverter(BaseConverter):
         converted_package += tag + '\n' + self.get_underline(tag, '-') + '\n' 
         authors = json.loads(dataset_dict.get('author', '[]')) 
         for author in authors:
-              author_name = author ['name']
-              author_affiliation = author ['affiliation']
-              converted_package += u' - {0} ({1})\n'.format(author_name, author_affiliation)
+            author_name = ""
+            if author.get('given_name'):
+                author_name += author['given_name'].strip() + ' '
+            author_name += author['name'].strip() 
+            author_affiliation = author ['affiliation']
+            converted_package += u' - {0} ({1})\n'.format(author_name, author_affiliation)
         converted_package += u'\n'
                                                 
         # keywords 
@@ -134,7 +137,10 @@ class ReadmeConverter(BaseConverter):
         converted_package += tag + '\n' + self.get_underline(tag, '-') + '\n' 
         maintainer = json.loads(dataset_dict.get('maintainer', '')) 
         if maintainer:
-              maintainer_name = maintainer['name'].strip()
+              maintainer_name = ""
+              if maintainer.get('given_name'):
+                  maintainer_name += maintainer['given_name'].strip() + ' '
+              maintainer_name += maintainer['name'].strip()
               maintainer_affiliation = maintainer['affiliation'].strip()
               maintainer_mail = maintainer['email'].strip()
               converted_package += u'{0} ({1}), mail: {2}\n\n'.format(maintainer_name, maintainer_affiliation, maintainer_mail)

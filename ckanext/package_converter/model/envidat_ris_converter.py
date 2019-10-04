@@ -56,7 +56,11 @@ class RisConverter(BaseConverter):
         authors = json.loads(dataset_dict.get('author', '[]')) 
         author_names = [ ]
         for author in authors:
-            ris_list += [ u"AU  - " + author['name'] ]        
+            author_name = ""
+            if author.get('given_name'):
+                author_name += author['given_name'].strip() + ' '
+            author_name += author['name'].strip() 
+            ris_list += [ u"AU  - " + author_name ]        
  
         #   DO  - DOI
         doi = dataset_dict.get('doi','').strip()

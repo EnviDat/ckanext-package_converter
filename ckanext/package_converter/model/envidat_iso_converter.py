@@ -87,10 +87,15 @@ class Iso19139Converter(BaseConverter):
         # Point of Contact (M)
         maintainer = json.loads(dataset_dict.get('maintainer', '{}'))
 
+        maintainer_name = ""
+        if maintainer.get('given_name'):
+            maintainer_name += maintainer['given_name'].strip() + ' '
+        maintainer_name += maintainer['name']
+
         responsible_party_contact = collections.OrderedDict()
         
-        responsible_party_contact['gmd:individualName'] = {'gco:CharacterString':maintainer.get('name','')}
-        responsible_party_contact['gmd:organisationName'] = {'gco:CharacterString':maintainer.get('affiliation','')}
+        responsible_party_contact['gmd:individualName'] = {'gco:CharacterString': maintainer_name}
+        responsible_party_contact['gmd:organisationName'] = {'gco:CharacterString': maintainer.get('affiliation','')}
 #        responsible_party_contact['gmd:positionName'] = {'gco:CharacterString':'', '@gco:nilReason':"missing"}
         
         rpc_ci_contact = collections.OrderedDict()

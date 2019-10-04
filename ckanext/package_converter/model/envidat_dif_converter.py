@@ -82,7 +82,10 @@ class GcmdDifConverter(BaseConverter):
         author_names = []
         try:
             for author in json.loads(dataset_dict.get('author', '[]')):
-                author_names += [author.get('name','')]
+                author_name = ""
+                if author.get('given_name'):
+                    author_name += author['given_name'].strip() + ' '
+                author_names += [ author_name + author['name'] ]
         except:
             pass
         
@@ -91,7 +94,13 @@ class GcmdDifConverter(BaseConverter):
         
         ## "Dataset_Editor" maintainer
         try:
-            maintainer_name = json.loads(dataset_dict.get('maintainer', '{}')).get('name','')
+            maintainer = json.loads(dataset_dict.get('maintainer', '{}'))
+            
+            maintainer_name = ""
+            if maintainer.get('given_name'):
+                maintainer_name += maintainer['given_name'].strip() + ' '
+            maintainer_name += maintainer['name']
+
             dif_metadata_dict['Dataset_Citation']['Dataset_Editor'] = maintainer_name
         except:
             pass
@@ -134,7 +143,7 @@ class GcmdDifConverter(BaseConverter):
         dif_metadata_dict['Personnel'] = collections.OrderedDict()
         dif_metadata_dict['Personnel']['Role'] = "TECHNICAL CONTACT"
         dif_metadata_dict['Personnel']['Contact_Person'] = collections.OrderedDict()
-        dif_metadata_dict['Personnel']['Contact_Person']['First_Name'] = maintainer.get('name', '').strip().split(' ')[0]
+        dif_metadata_dict['Personnel']['Contact_Person']['First_Name'] = maintainer.get('given_name', maintainer.get('name', '').strip().split(' ')[0]).strip()
         dif_metadata_dict['Personnel']['Contact_Person']['Last_Name'] = maintainer.get('name', '').strip().split(' ')[-1]
         dif_metadata_dict['Personnel']['Contact_Person']['Email'] = maintainer.get('email', '')
 

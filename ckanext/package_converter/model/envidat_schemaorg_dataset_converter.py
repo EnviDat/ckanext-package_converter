@@ -76,16 +76,21 @@ class SchemaOrgDadatasetConverter(BaseConverter):
         authors = json.loads(dataset_dict.get('author', '[]')) 
         for author in authors:
               author_dict = collections.OrderedDict()
-              author_dict["name"] = author ['name']
-              if len(author['name'].split(' ')) > 1:
-                  author_dict["givenName"] = author['name'].split(' ')[0]
-                  author_dict["familyName"] = author['name'].split(' ')[1]
-              elif len(author['name'].split(',')) > 1:
-                  author_dict["givenName"] = author['name'].split(',')[1].strip()
-                  author_dict["familyName"] = author['name'].split(',')[0].strip()
-              elif len(author['name'].split('.')) > 1:
-                  author_dict["givenName"] = author['name'].split('.')[0] + '.'
-                  author_dict["familyName"] = author['name'].split('.')[1].strip()
+              if len(author.get("given_name",'').strip())>0:
+                  author_dict["name"] = author['given_name'].strip() + ' ' + author['name'].strip()
+                  author_dict["givenName"] = author['given_name'].strip()
+                  author_dict["familyName"] = author['name'].strip()
+              else:
+                  author_dict["name"] = author['name']
+                  if len(author['name'].split(' ')) > 1:
+                      author_dict["givenName"] = author['name'].split(' ')[0]
+                      author_dict["familyName"] = author['name'].split(' ')[1]
+                  elif len(author['name'].split(',')) > 1:
+                      author_dict["givenName"] = author['name'].split(',')[1].strip()
+                      author_dict["familyName"] = author['name'].split(',')[0].strip()
+                  elif len(author['name'].split('.')) > 1:
+                      author_dict["givenName"] = author['name'].split('.')[0] + '.'
+                      author_dict["familyName"] = author['name'].split('.')[1].strip()
               author_dict["@type"] = "Person"
               converted_dict["author"] += [author_dict]
         

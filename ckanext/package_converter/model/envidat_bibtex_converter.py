@@ -64,7 +64,10 @@ class BibtexConverter(BaseConverter):
         authors = json.loads(dataset_dict.get('author', '[]')) 
         author_names = []
         for author in authors:
-            author_names += [author['name']]
+            author_name = ""
+            if author.get('given_name'):
+                author_name += author['given_name'].strip() + ' '
+            author_names += [ author_name + author['name'] ]
         bibtex_author = u' and '.join(author_names)
         converted_package += u',\n\t author = "{0}"'.format(bibtex_author)
 

@@ -209,13 +209,24 @@ class Datacite31SchemingConverter(SchemingConverter):
         # Creators
         datacite_creators_tag = 'creators'
         datacite_creator_tag = 'creator'
-        datacite_creator_subfields = ['creatorName', 'affiliation', 'nameIdentifier', 'nameIdentifier.nameIdentifierScheme']
+        datacite_creator_subfields = ['creatorName', 'givenName', 'familyName', 'affiliation', 'nameIdentifier', 'nameIdentifier.nameIdentifierScheme']
 
         datacite_dict['resource'][datacite_creators_tag] = { datacite_creator_tag: [ ] }
         ckan_creators = self._get_complex_mapped_value(datacite_creators_tag, datacite_creator_tag, datacite_creator_subfields, dataset_dict, metadata_map)
         for ckan_creator in ckan_creators:
             datacite_creator = collections.OrderedDict()
-            datacite_creator['creatorName'] = ckan_creator.get(self._joinTags([datacite_creator_tag, 'creatorName']), '')
+            
+            creator_full_name = ckan_creator.get(self._joinTags([datacite_creator_tag, 'creatorName']), '')
+            if creator_full_name:
+                datacite_creator['creatorName'] = creator_full_name
+            else:
+                creator_family_name = ckan_creator.get(self._joinTags([datacite_creator_tag, 'familyName']), '').strip()
+                creator_given_name = ckan_creator.get(self._joinTags([datacite_creator_tag, 'givenName']), '').strip()
+                datacite_creator['creatorName'] = creator_family_name
+                if creator_given_name:
+                    datacite_creator['givenName'] = creator_given_name
+                    datacite_creator['familyName'] = creator_family_name 
+                    datacite_creator['creatorName'] = creator_given_name + ' ' + creator_family_name 
             if ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier']), False):
                 datacite_creator['nameIdentifier'] = { '#text': ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier']), ''),
                                                        '@nameIdentifierScheme':  ckan_creator.get(self._joinTags([datacite_creator_tag, 'nameIdentifier', 'nameIdentifierScheme']), 'orcid').upper() }
@@ -268,15 +279,27 @@ class Datacite31SchemingConverter(SchemingConverter):
         # Contributor (contact person)
         datacite_contributors_tag = 'contributors'
         datacite_contributor_tag = 'contributor'
-        datacite_contributor_subfields = ['contributorName', 'affiliation', 'contributorType', 'nameIdentifier', 'nameIdentifier.nameIdentifierScheme']
+        datacite_contributor_subfields = ['contributorName', 'givenName', 'familyName', 'affiliation', 'contributorType', 'nameIdentifier', 'nameIdentifier.nameIdentifierScheme']
         datacite_contributors = []
         ckan_contributors = self._get_complex_mapped_value(datacite_contributors_tag, datacite_contributor_tag, datacite_contributor_subfields, dataset_dict, metadata_map)
         for ckan_contributor in ckan_contributors:
             datacite_contributor = collections.OrderedDict()
-            datacite_contributor['contributorName'] = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'contributorName']), '')
+
+            contributor_full_name = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'contributorName']), '')
+            if contributor_full_name:
+                datacite_contributor['contributorName'] = contributor_full_name
+            else:
+                contributor_family_name = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'familyName']), '').strip()
+                contributor_given_name = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'givenName']), '').strip()
+                datacite_contributor['contributorName'] = contributor_family_name
+                if contributor_given_name:
+                    datacite_contributor['givenName'] = contributor_given_name
+                    datacite_contributor['familyName'] = contributor_family_name 
+                    datacite_contributor['contributorName'] = contributor_given_name + ' ' + contributor_family_name 
+
             if ckan_contributor.get(datacite_contributor_tag + '.' + 'nameIdentifier', False):
                 datacite_contributor['nameIdentifier'] = { '#text': ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'nameIdentifier']), ''),
-                                                           '@nameIdentifierScheme':  ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'nameIdentifier', 'nameIdentifierScheme']) , '').upper() }
+                                                           '@nameIdentifierScheme':  ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'nameIdentifier', 'nameIdentifierScheme']) , 'orcid').upper() }
             datacite_contributor['affiliation'] = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'affiliation']), '')
             ckan_contributor_type = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'contributorType']), 'ContactPerson')
             datacite_contributor['@contributorType'] = self._valueToDataciteCV (ckan_contributor_type, 'contributorType')
@@ -599,15 +622,18 @@ class Datacite42SchemingConverter(SchemingConverter):
         # Contributor (contact person)
         datacite_contributors_tag = 'contributors'
         datacite_contributor_tag = 'contributor'
-        datacite_contributor_subfields = ['contributorName', 'affiliation', 'contributorType', 'nameIdentifier', 'nameIdentifier.nameIdentifierScheme']
+        datacite_contributor_subfields = ['contributorName', 'givenName', 'familyName', 'affiliation', 'contributorType', 'nameIdentifier', 'nameIdentifier.nameIdentifierScheme']
         datacite_contributors = []
         ckan_contributors = self._get_complex_mapped_value(datacite_contributors_tag, datacite_contributor_tag, datacite_contributor_subfields, dataset_dict, metadata_map)
         for ckan_contributor in ckan_contributors:
             datacite_contributor = collections.OrderedDict()
             datacite_contributor['contributorName'] = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'contributorName']), '')
+
+
+
             if ckan_contributor.get(datacite_contributor_tag + '.' + 'nameIdentifier', False):
                 datacite_contributor['nameIdentifier'] = { '#text': ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'nameIdentifier']), ''),
-                                                           '@nameIdentifierScheme':  ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'nameIdentifier', 'nameIdentifierScheme']) , '').upper() }
+                                                           '@nameIdentifierScheme':  ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'nameIdentifier', 'nameIdentifierScheme']) , 'orcid').upper() }
             datacite_contributor['affiliation'] = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'affiliation']), '')
             ckan_contributor_type = ckan_contributor.get(self._joinTags([datacite_contributor_tag, 'contributorType']), 'ContactPerson')
             datacite_contributor['@contributorType'] = self._valueToDataciteCV (ckan_contributor_type, 'contributorType')
