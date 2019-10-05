@@ -15,7 +15,6 @@ from ckanext.package_converter.model.converter import Converters
 from ckanext.package_converter.model.record import JSONRecord
 
 from logging import getLogger
-
 log = getLogger(__name__)
 
 @toolkit.side_effect_free

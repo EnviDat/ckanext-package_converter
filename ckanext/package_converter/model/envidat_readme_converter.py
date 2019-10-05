@@ -43,7 +43,7 @@ class ReadmeConverter(BaseConverter):
 
     def _bibtex_convert_dataset(self, dataset_dict):
     
-    	converted_package = u'\n\n'
+        converted_package = u'\n\n'
         
         tag = u" DATASET IDENTIFICATION "
         converted_package += tag + '\n' + self.get_underline(tag, '-') + '\n'
@@ -111,7 +111,22 @@ class ReadmeConverter(BaseConverter):
               date_type = date['date_type'].title()
               converted_package += u' - {0}: {1}\n'.format(date_type, date_text)
         converted_package += u'\n'
- 
+        
+         # funding info
+        funders = json.loads(dataset_dict.get('funding', '[]')) 
+        
+        if funders:
+            tag = u" ACKNOWLEDGEMENTS "
+            converted_package += tag + '\n' + self.get_underline(tag, '-') + '\n' 
+            converted_package += u" The following institutions contributed to finance this dataset: \n"
+            for funder in funders:
+                  funder_name = funder['institution']
+                  award_number = funder.get('grant_number','')
+                  if award_number:
+                      award_number = u' (' + award_number + u')' 
+                  converted_package += u' - {0}{1}\n'.format(funder_name, award_number)
+            converted_package += u'\n'
+
          # other information
         tag = u" ADDITIONAL INFORMATION "
         converted_package += tag + '\n' + self.get_underline(tag, '-') + '\n' 

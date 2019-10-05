@@ -8,8 +8,8 @@ from ckanext.package_converter.model.converter import Converters
 from logging import getLogger
 log = getLogger(__name__)
 
-DEAFULT_BASE_CONVERTER = 'ckanext.package_converter.model.scheming_converter.Datacite31SchemingConverter'
-DEAFULT_RESOURCE_BASE_CONVERTER = 'ckanext.package_converter.model.scheming_resource_converter.Datacite31SchemingResourceConverter'
+DEAFULT_BASE_CONVERTER = 'ckanext.package_converter.model.scheming_converter.Datacite43SchemingConverter'
+DEAFULT_RESOURCE_BASE_CONVERTER = 'ckanext.package_converter.model.scheming_resource_converter.Datacite43SchemingResourceConverter'
 
 class Package_ConverterPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
