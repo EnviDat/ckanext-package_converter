@@ -66,8 +66,18 @@ class Datacite43SchemingResourceConverter(Datacite43SchemingConverter):
             datacite_size_group_tag = 'sizes'
             datacite_size_tag = 'size'
             datacite_sizes = []
+            
+            log.debug('** SIZE *** ' + resource_dict.get('resource_size', ''))
             if resource_dict.get('size', ''):
                 datacite_sizes += [{'#text': str(resource_dict.get('size', ' ')) + ' bytes'}]
+            elif resource_dict.get('resource_size', ''):
+                resource_size = resource_dict.get('resource_size', '')
+                try:
+                    resource_size_obj = json.loads(resource_size)
+                    datacite_sizes += [{'#text': resource_size_obj.get('size_value' , '0') + ' ' + resource_size_obj.get('size_unit' , 'KB').upper()}]
+                except:
+                    log.error('unparseable value at resource_size:' + str(resource_size))
+
             if datacite_sizes:
                 datacite_dict['resource'][datacite_size_group_tag] = {datacite_size_tag: datacite_sizes}
 
