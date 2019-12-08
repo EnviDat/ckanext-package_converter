@@ -7,6 +7,7 @@ from ckanext.package_converter.model.record import Record, JSONRecord, XMLRecord
 from ckanext.scheming import helpers
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
+import ckan.lib.helpers as h
 
 import collections
 from pylons import config
@@ -354,6 +355,40 @@ class Datacite43SchemingConverter(SchemingConverter):
         if dataset_dict.get('url', ''):
             datacite_dict['resource']['alternateIdentifiers']['alternateIdentifier'] += [{'#text': dataset_dict.get('url', ''), '@alternateIdentifierType':'URL'}]
 
+        # Related identifiers (related_datasets)
+        # relatedIdentifiers
+        # relatedIdentifier relatedIdentifierType="URL or DOI" relationType="Cites" 
+        
+        related_datasets = dataset_dict.get('related_datasets', '')
+        if related_datasets:
+            datacite_related_urls = collections.OrderedDict()
+            datacite_related_urls['relatedIdentifier'] = []
+    
+            for line in related_datasets.split('\n'):
+                if line.strip().startswith('*'):
+                
+                    line_contents = line.replace('*','').strip().lower().split(' ')[0]
+                    package_list = []
+                    related_url = None
+                    try:
+                        package_list = toolkit.get_action('package_list')(
+                                        context={'ignore_auth': False},
+                                        data_dict={})
+                    except:
+                        logger.error('envidat_get_related_datasets: could not retrieve package list from API')
+
+                    if line_contents in package_list:
+                        base_url = config.get('datacite_publication.url_prefix', config.get('ckan.site_url', '') + '/dataset')
+                        related_url = base_url + '/' + line_contents
+                    elif line_contents.startswith('https://') or line_contents.startswith('http://'):
+                        related_url = line_contents
+                
+                    if related_url:
+                        datacite_related_urls['relatedIdentifier'] += [{'#text':related_url, '@relatedIdentifierType':'URL', '@relationType':'Cites'}]
+            
+            if len(datacite_related_urls['relatedIdentifier'])>0:
+                datacite_dict['resource']['relatedIdentifiers'] = datacite_related_urls
+        
         # Sizes (not defined in scheming, taken from default CKAN resource)
         datacite_size_group_tag = 'sizes'
         datacite_size_tag = 'size'
