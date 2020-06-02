@@ -1,5 +1,4 @@
-import ckanext
-
+from ckantoolkit import config
 import ckan.lib.helpers as helpers
 import ckan.plugins.toolkit as toolkit
 
@@ -11,10 +10,7 @@ import collections
 from xmltodict import unparse
 import json
 import sys
-
-from dateutil.parser import parse
-import string
-import copy 
+import copy
 
 from logging import getLogger
 log = getLogger(__name__)
@@ -310,6 +306,13 @@ class GcmdDifConverter(BaseConverter):
         
         #<xs:element name="Reference" type="ReferenceType" minOccurs="0" maxOccurs="unbounded"/>
         # TODO: find paper citation in the description and parse it to this element
+
+        # TODO: test Multimedia_Sample element
+        thumbnail = config.get('package_converter.thumbnail', '')
+        if thumbnail:
+            thumbnail_url = helpers.url_for_static_or_external(thumbnail, qualified=True)
+            dif_metadata_dict['Multimedia_Sample'] = collections.OrderedDict()
+            dif_metadata_dict['Multimedia_Sample']['URL'] = thumbnail_url
               
         # Summary (M)
         dif_metadata_dict['Summary'] = collections.OrderedDict()
