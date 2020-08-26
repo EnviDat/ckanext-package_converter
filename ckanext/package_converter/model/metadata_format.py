@@ -1,5 +1,6 @@
 from flufl.enum import Enum
 
+
 class FormatType(Enum):
     XML = 'xml'
     JSON = 'json'
@@ -10,9 +11,11 @@ class FormatType(Enum):
     RDF = 'rdf'
     OTHER = 'other'
 
+
 class MetadataFormat(object):
 
-    def __init__(self, format_name, version, format_type = FormatType.OTHER, file_extension='', mimetype='', description=''):
+    def __init__(self, format_name, version, format_type=FormatType.OTHER, file_extension='', mimetype='',
+                 description=''):
         self.format_name = format_name
         self.version = version
         self.format_type = format_type
@@ -41,12 +44,13 @@ class MetadataFormat(object):
     def is_compatible(self, other, check_version=False):
         if self.__eq__(other):
             return True
-        elif ((not check_version or self.version.lower() == other.get_version().lower()) and self.format_name.lower() == other.get_format_name().lower()):
+        elif ((
+                      not check_version or self.version.lower() == other.get_version().lower()) and self.format_name.lower() == other.get_format_name().lower()):
             return True
         return False
 
     def _guess_mimetype(self, format_type):
-        if format_type ==  FormatType.XML:
+        if format_type == FormatType.XML:
             return 'application/xml'
         elif format_type == FormatType.JSON:
             return 'application/json'
@@ -75,12 +79,14 @@ class MetadataFormat(object):
         return str(self)
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return str(self).encode('utf-8')
 
     def __unicode__(self):
-        return ((u'MetadataFormat {format_name} v.{version}, {format_type}, {mimetype} (.{file_extension}): {description}')
-                .format(format_name=self.format_name, version=self.version, format_type=self.format_type.name,
-                        mimetype=self.mimetype, file_extension=self.file_extension, description=self.description))
+        return (
+            u'MetadataFormat {format_name} v.{version}, {format_type}, {mimetype} (.{file_extension}): {description}'
+            .format(format_name=self.format_name, version=self.version, format_type=self.format_type.name,
+                    mimetype=self.mimetype, file_extension=self.file_extension, description=self.description))
+
 
 class XMLMetadataFormat(MetadataFormat):
 
@@ -97,8 +103,9 @@ class XMLMetadataFormat(MetadataFormat):
 
     def __unicode__(self):
         return super(XMLMetadataFormat, self).__unicode__() + (
-                     u', xsd = {xsd}, namespace = {namespace}').format(
-                        xsd=self.xsd_url, namespace = self.namespace )
+            u', xsd = {xsd}, namespace = {namespace}').format(
+            xsd=self.xsd_url, namespace=self.namespace)
+
 
 class MetadataFormats(object):
     # Singleton
@@ -109,7 +116,7 @@ class MetadataFormats(object):
         def add_metadata_format(self, metadata_format, replace=False):
             # TODO: Check duplicates 
             key = metadata_format.get_format_name()
-            if not self.formats_dict.has_key(key):
+            if key not in self.formats_dict.keys():
                 self.formats_dict[key] = []
             if replace:
                 self.formats_dict[key] = [metadata_format]
@@ -147,14 +154,15 @@ class MetadataFormats(object):
             return str(self)
 
         def __str__(self):
-            return unicode(self).encode('utf-8') 
+            return str(self).encode('utf-8')
 
         def __unicode__(self):
-            return (u'MetadataFormats ({num_formats}): {formats_dict}').format(num_formats=self.get_num_formats(), formats_dict=self.formats_dict)
+            return u'MetadataFormats ({num_formats}): {formats_dict}'.format(num_formats=self.get_num_formats(),
+                                                                             formats_dict=self.formats_dict)
 
     instance = None
-    def __new__(cls): # __new__ always a classmethod
+
+    def __new__(cls):  # __new__ always a classmethod
         if not MetadataFormats.instance:
             MetadataFormats.instance = MetadataFormats.__MetadataFormats()
         return MetadataFormats.instance
-
