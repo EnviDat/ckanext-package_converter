@@ -76,8 +76,8 @@ class SchemingConverter(BaseConverter):
                 repeating_field = json.loads(value)
                 if type(repeating_field) is list:
                     value = repeating_field[0]
-            except Exception:
-                sys.exc_clear()
+            except Exception as e:
+                log.debug("_get_single_mapped_value: Value cannot be parsed as repeating {0}".format(e))
 
         # composite (if repeating, get first)
         if not value and (len(ckan_tag.split('.')) > 1):
@@ -92,7 +92,7 @@ class SchemingConverter(BaseConverter):
                 value = json_field[subfield]
             except:
                 log.error("Unexpected error:", sys.exc_info()[0])
-                sys.exc_clear()
+                log.debug("_get_single_mapped_value: Value cannot be parsed as composite {0}".format(ckan_tag))
 
         if not value:
             value = default
