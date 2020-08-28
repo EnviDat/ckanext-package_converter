@@ -81,7 +81,7 @@ class BibtexConverter(BaseConverter):
         # url
         # dataset url as information
         protocol, host = helpers.get_site_protocol_and_host()
-        url = protocol + '://' + host + url_for(controller='package', action='read',
+        url = protocol + '://' + host + url_for(controller='dataset', action='read',
                                                 id=dataset_dict.get('name', ''))
         print(url)
         converted_package += u',\n\t url = "' + url + '"'

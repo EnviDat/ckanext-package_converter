@@ -137,7 +137,7 @@ class GcmdDifConverter(BaseConverter):
             dif_metadata_dict['Dataset_Citation']['Persistent_Identifier'] = identifier
             ## "Online_Resource"
         protocol, host = helpers.get_site_protocol_and_host()
-        package_url = protocol + '://' + host + toolkit.url_for(controller='package', action='read',
+        package_url = protocol + '://' + host + toolkit.url_for(controller='dataset', action='read',
                                                                 id=dataset_dict.get('name', ''))
         dif_metadata_dict['Dataset_Citation']['Online_Resource'] = package_url
 

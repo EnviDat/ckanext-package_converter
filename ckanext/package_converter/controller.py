@@ -3,55 +3,92 @@ import ckan.plugins.toolkit as toolkit
 
 from logging import getLogger
 
+from flask import Blueprint, make_response
+
 log = getLogger(__name__)
 
 
-class PackageExportController(toolkit.BaseController):
+def get_blueprints(name, module):
+    # Create Blueprint for plugin
+    blueprint = Blueprint(name, module)
 
-    def package_export(self, package_id, file_format='', extension='xml'):
-        """Return the given dataset as a converted file.
-        """
+    blueprint.add_url_rule(
+        u"/dataset/<package_id>/export/<file_format>.<extension>",
+        u"package_export",
+        package_export
+    )
 
-        context = {
-            'model': model,
-            'session': model.Session,
-            'user': toolkit.c.user,
-        }
-        r = toolkit.response
-        r.content_disposition = 'attachment; filename=' + package_id + '_' + file_format + '.' + extension
-        # r.content_type = 'application/xml'
+    blueprint.add_url_rule(
+        u"/dataset/<package_id>/resource/<resource_id>/export/<file_format>.<extension>",
+        u"resource_export",
+        resource_export
+    )
 
-        try:
-            converted_package = toolkit.get_action(
-                'package_export')(
-                context,
-                {'id': package_id, 'format': file_format}
-            )
-        except toolkit.ObjectNotFound:
-            toolkit.abort(404, 'Dataset not found')
+    return blueprint
 
-        return converted_package
 
-    def resource_export(self, resource_id, file_format='', extension='xml'):
-        """Return the given dataset as a converted file.
-        """
+# class PackageExportController(toolkit.BaseController):
 
-        context = {
-            'model': model,
-            'session': model.Session,
-            'user': toolkit.c.user,
-        }
-        r = toolkit.response
-        r.content_disposition = 'attachment; filename=' + resource_id + '_' + file_format + '.' + extension
-        # r.content_type = 'application/xml'
+def package_export(package_id, file_format='', extension='xml'):
+    """Return the given dataset as a converted file.
+    """
+    converted_package = None
 
-        try:
-            converted_resource = toolkit.get_action(
-                'resource_export')(
-                context,
-                {'id': resource_id, 'format': file_format}
-            )
-        except toolkit.ObjectNotFound:
-            toolkit.abort(404, 'Dataset not found')
+    context = {
+        'model': model,
+        'session': model.Session,
+        'user': toolkit.g.user
+    }
 
-        return converted_resource
+    content_type = 'text / plain'
+    if extension == 'xml':
+        content_type = 'application/xml'
+    elif extension == 'json':
+        content_type = 'application/json'
+
+    headers = {u'Content-Disposition': 'attachment; filename=' + package_id + '_' + file_format + '.' + extension,
+               u'Content-Type': content_type}
+
+    try:
+        converted_package = toolkit.get_action(
+            'package_export')(
+            context,
+            {'id': package_id, 'format': file_format}
+        )
+    except toolkit.ObjectNotFound:
+        toolkit.abort(404, 'Dataset not found')
+
+    return make_response(converted_package, 200, headers)
+
+
+def resource_export(resource_id, file_format='', extension='xml'):
+    """Return the given dataset as a converted file.
+    """
+
+    converted_resource = None
+
+    context = {
+        'model': model,
+        'session': model.Session,
+        'user': toolkit.g.user
+    }
+
+    content_type = 'text / plain'
+    if extension == 'xml':
+        content_type = 'application/xml'
+    elif extension == 'json':
+        content_type = 'application/json'
+
+    headers = {u'Content-Disposition': 'attachment; filename=' + resource_id + '_' + file_format + '.' + extension,
+               u'Content-Type': content_type}
+
+    try:
+        converted_resource = toolkit.get_action(
+            'resource_export')(
+            context,
+            {'id': resource_id, 'format': file_format}
+        )
+    except toolkit.ObjectNotFound:
+        toolkit.abort(404, 'Dataset/Resource not found')
+
+    return make_response(converted_resource, 200, headers)

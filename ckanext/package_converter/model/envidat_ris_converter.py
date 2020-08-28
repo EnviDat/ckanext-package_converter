@@ -62,7 +62,7 @@ class RisConverter(BaseConverter):
 
             #   UR  - dataset url as information
         protocol, host = helpers.get_site_protocol_and_host()
-        url = protocol + '://' + host + toolkit.url_for(controller='package', action='read',
+        url = protocol + '://' + host + toolkit.url_for(controller='dataset', action='read',
                                                         id=dataset_dict.get('name', ''))
         ris_list += [u"UR  - " + url]
 

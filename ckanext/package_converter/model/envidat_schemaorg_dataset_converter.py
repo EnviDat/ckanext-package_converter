@@ -44,7 +44,7 @@ class SchemaOrgDadatasetConverter(BaseConverter):
 
         # url id
         protocol, host = helpers.get_site_protocol_and_host()
-        url_id = protocol + '://' + host + toolkit.url_for(controller='package', action='read',
+        url_id = protocol + '://' + host + toolkit.url_for(controller='dataset', action='read',
                                                            id=dataset_dict.get('id', ''))
         converted_dict["@id"] = url_id
 
@@ -58,7 +58,7 @@ class SchemaOrgDadatasetConverter(BaseConverter):
 
         # url name
         protocol, host = helpers.get_site_protocol_and_host()
-        url_name = protocol + '://' + host + toolkit.url_for(controller='package', action='read',
+        url_name = protocol + '://' + host + toolkit.url_for(controller='dataset', action='read',
                                                              id=dataset_dict.get('name', ''))
         converted_dict["@url"] = url_name
 

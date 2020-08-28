@@ -88,5 +88,5 @@ class TestPackageConverter(object):
         app = self._get_test_app()
         dataset = factories.Dataset(name='dataset_test_api_export')
         response = app.get(
-            url=url_for(controller='package', action='package_export', id=dataset['name'], file_format='custom', extension='txt')
+            url=url_for(controller='dataset', action='package_export', id=dataset['name'], file_format='custom', extension='txt')
         )

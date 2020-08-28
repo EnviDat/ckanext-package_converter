@@ -337,7 +337,7 @@ class Iso19139Converter(BaseConverter):
 
         # dataset url as information
         protocol, host = helpers.get_site_protocol_and_host()
-        package_url = protocol + '://' + host + toolkit.url_for(controller='package', action='read',
+        package_url = protocol + '://' + host + toolkit.url_for(controller='dataset', action='read',
                                                                 id=dataset_dict.get('name', ''))
         online_resource_dataset = self.get_online_resource(package_url, 'dataset metadata', 'information')
         online_resources += [online_resource_dataset]
@@ -346,7 +346,8 @@ class Iso19139Converter(BaseConverter):
         for resource in dataset_dict.get('resources', []):
             resource_name = resource.get('name', resource.get('id', 'DATASET RESOURCE'))
             resource_url = resource.get('url', toolkit.url_for(controller='resource', action='read',
-                                                               id=resource.get('id', '')))
+                                                               id=dataset_dict.get('id', ''),
+                                                               resource_id=resource.get('id', '')))
             # check if restricted
             if not helpers.is_url(resource_url):
                 log.debug('resource is restricted: ' + resource_name)

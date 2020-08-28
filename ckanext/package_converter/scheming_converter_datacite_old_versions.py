@@ -194,7 +194,7 @@ class Datacite31SchemingConverter(SchemingConverter):
                                                                        '@' + datacite_resource_type_general_tag: datacite_resource_type_general }
 
         # Alternate Identifier (CKAN URL)
-        #ckan_package_url = config.get('ckan.site_url','') + toolkit.url_for(controller='package', action='read', id=dataset_dict.get('name', ''))
+        #ckan_package_url = config.get('ckan.site_url','') + toolkit.url_for(controller='dataset', action='read', id=dataset_dict.get('name', ''))
         ckan_package_url = config.get('ckan.site_url','') + '/dataset/' + dataset_dict.get('name', dataset_dict.get('id'))
         datacite_dict['resource']['alternateIdentifiers']={'alternateIdentifier':[{'#text':ckan_package_url, '@alternateIdentifierType':'URL'}]}
         # legacy
@@ -400,7 +400,7 @@ class Datacite31SchemingResourceConverter(Datacite31SchemingConverter):
                 datacite_dict['resource'][datacite_titles_tag][datacite_title_tag] += [ datacite_title ]
 
             # Alternate Identifier (CKAN URL) Decide which is landing page, resource or package
-            ckan_resource_url = config.get('ckan.site_url','') + toolkit.url_for(controller='package', action='resource_read',
+            ckan_resource_url = config.get('ckan.site_url','') + toolkit.url_for(controller='dataset', action='resource_read',
                                                                              id = resource_dict.get('package_id', ''),
                                                                              resource_id = resource_dict.get('id', ''))
             datacite_dict['resource']['alternateIdentifiers']={'alternateIdentifier':[{'#text':ckan_resource_url, '@alternateIdentifierType':'URL'}]}

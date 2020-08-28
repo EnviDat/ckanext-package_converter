@@ -1,19 +1,20 @@
+
 {% ckan_extends %}
 
 {% block package_description %}
   {{ super() }}
 
   
-   <a href="{{ h.url_for('api.action', ver=3, logic_function='package_export', package_id=pkg.name, file_format='datacite', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' DataCite ')}}</a>
-   <a href="{{ h.url_for('api.action', ver=3, logic_function='package_export', package_id=pkg.name, file_format='iso19139', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' ISO 19139 ')}}</a>
-   <a href="{{ h.url_for('api.action', ver=3, logic_function='package_export', package_id=pkg.name, file_format='gcmd_dif', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' GCMD DIF ')}}</a>
+   <a href="{{ h.url_for('package_converter.package_export', package_id=pkg.name, file_format='datacite', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' DataCite ')}}</a>
+   <a href="{{ h.url_for('package_converter.package_export', package_id=pkg.name, file_format='iso19139', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' ISO 19139 ')}}</a>
+   <a href="{{ h.url_for('package_converter.package_export', package_id=pkg.name, file_format='gcmd_dif', extension='xml')}}" class="btn"><i class="fa fa-icon fa-file-text"></i>{{ _(' GCMD DIF ')}}</a>
   
   {% set custom_readme_link = h.package_converter_readme_link(pkg) %}
-  {% set converted_readme_link = h.url_for('api.action', ver=3, logic_function='package_export', package_id=pkg.name, file_format='plain-text', extension='txt') %}
+  {% set converted_readme_link = h.url_for('package_converter.package_export', package_id=pkg.name, file_format='plain-text', extension='txt') %}
    <a href="{{ custom_readme_link if custom_readme_link != None else converted_readme_link }}" class="btn" download><i class="fa fa-icon fa-file-text"></i>{{ _(' README.txt ')}}</a>
 
-   <a href="{{ h.url_for('api.action', ver=3, logic_function='package_export', package_id=pkg.name, file_format='bibtex', extension='bib')}}" class="btn"><i class="fa fa-icon fa-bookmark"></i>{{ _(' BibTex ')}}</a>
-   <a href="{{ h.url_for('api.action', ver=3, logic_function='package_export', package_id=pkg.name, file_format='ris', extension='ris')}}" class="btn"><i class="fa fa-icon fa-bookmark"></i>{{ _(' RIS ')}}</a>
+   <a href="{{ h.url_for('package_converter.package_export', package_id=pkg.name, file_format='bibtex', extension='bib')}}" class="btn"><i class="fa fa-icon fa-bookmark"></i>{{ _(' BibTex ')}}</a>
+   <a href="{{ h.url_for('package_converter.package_export', package_id=pkg.name, file_format='ris', extension='ris')}}" class="btn"><i class="fa fa-icon fa-bookmark"></i>{{ _(' RIS ')}}</a>
    
 
 {% endblock %}

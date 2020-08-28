@@ -48,7 +48,7 @@ class ReadmeConverter(BaseConverter):
 
         # url
         protocol, host = helpers.get_site_protocol_and_host()
-        url = protocol + '://' + host + toolkit.url_for(controller='package', action='read',
+        url = protocol + '://' + host + toolkit.url_for(controller='dataset', action='read',
                                                         id=dataset_dict.get('name', ''))
         converted_package += u' - URL: ' + url + '\n\n'
 

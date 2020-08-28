@@ -58,8 +58,8 @@ class Datacite43SchemingResourceConverter(Datacite43SchemingConverter):
                 datacite_dict['resource'][datacite_titles_tag][datacite_title_tag] += [datacite_title]
 
             # Alternate Identifier (CKAN URL) Decide which is landing page, resource or package
-            ckan_resource_url = config.get('ckan.site_url', '') + url_for(controller='package',
-                                                                          action='resource_read',
+            ckan_resource_url = config.get('ckan.site_url', '') + url_for(controller='dataset_resource',
+                                                                          action='read',
                                                                           id=resource_dict.get('package_id',
                                                                                                ''),
                                                                           resource_id=resource_dict.get('id',

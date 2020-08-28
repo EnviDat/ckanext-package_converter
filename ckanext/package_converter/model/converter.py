@@ -46,7 +46,7 @@ class Converter(object):
         return str(self).encode('utf-8')
 
     def __unicode__(self):
-        return (u'Converter: {input_format}({input_version}) -> {output_format}({output_version}) ').format(
+        return u'Converter: {input_format}({input_version}) -> {output_format}({output_version}) '.format(
             input_format=self.input_format.get_format_name(), input_version=self.input_format.get_version(),
             output_format=self.output_format.get_format_name(), output_version=self.output_format.get_version())
 
@@ -68,7 +68,7 @@ class XSLConverter(Converter):
         self.xsl_path = xsl_path
 
     def can_convert(self, record, check_version=False):
-        return (super(XSLConverter, self).can_convert(record, check_version) and issubclass(type(record), XMLRecord))
+        return super(XSLConverter, self).can_convert(record, check_version) and issubclass(type(record), XMLRecord)
 
     def convert(self, record):
         if self.can_convert(record):
@@ -89,7 +89,7 @@ class XSLConverter(Converter):
         return record.xsl_transform(xsl_path)
 
     def __unicode__(self):
-        return super(XSLConverter, self).__unicode__() + (u' using XSL {xsl_path}').format(xsl_path=self.xsl_path)
+        return super(XSLConverter, self).__unicode__() + u' using XSL {xsl_path}'.format(xsl_path=self.xsl_path)
 
 
 class Converters(object):
@@ -178,6 +178,8 @@ class Converters(object):
             conversion_chain = self.find_conversion_chain(input_format, output_format, check_version=check_version,
                                                           limit=limit)
             if not conversion_chain:
+                log.error("ERROR: No conversion chain possible for {0} -> {1}".format(input_format.get_format_name(),
+                                                                                      output_format.get_format_name()))
                 return None
             latest_record = record
             for converter in conversion_chain:
@@ -192,7 +194,7 @@ class Converters(object):
             return str(self).encode('utf-8')
 
         def __unicode__(self):
-            return (u'Converters ({num_converters}): {converters_dict}').format(
+            return u'Converters ({num_converters}): {converters_dict}'.format(
                 num_converters=self.get_num_converters(), converters_dict=self.converters_dict)
 
     instance = None

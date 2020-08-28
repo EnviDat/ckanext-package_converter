@@ -7,6 +7,8 @@ from ckanext.package_converter.model.converter import Converters
 
 from logging import getLogger
 
+import ckanext.package_converter.controller as controller
+
 log = getLogger(__name__)
 
 DEAFULT_BASE_CONVERTER = 'ckanext.package_converter.model.scheming_converter.Datacite43SchemingConverter'
@@ -16,14 +18,16 @@ DEAFULT_RESOURCE_BASE_CONVERTER = 'ckanext.package_converter.model.scheming_reso
 class Package_ConverterPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IActions)
-    plugins.implements(plugins.IRoutes, inherit=True)
+    # plugins.implements(plugins.IRoutes, inherit=True)
     plugins.implements(plugins.ITemplateHelpers, inherit=True)
+    plugins.implements(plugins.IBlueprint, inherit=True)
 
     # IConfigurer
     def update_config(self, config_):
         toolkit.add_template_directory(config_, 'templates')
         toolkit.add_public_directory(config_, 'public')
-        toolkit.add_resource('fanstatic', 'package_converter')
+
+
         # Add custom converters
         custom_converters = config_.get('package_converter.converters', DEAFULT_BASE_CONVERTER).split()
         custom_converters += config_.get('package_converter.resource_converters',
@@ -31,21 +35,21 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
         for custom_converter in custom_converters:
             Converters().add_converter_by_name(custom_converter)
 
-    # IRoutes
-    def before_map(self, map_):
-        map_.connect(
-            'package_export',
-            '/dataset/{package_id}/export/{file_format}.{extension}',
-            controller='ckanext.package_converter.controller:PackageExportController',
-            action='package_export'
-        )
-        map_.connect(
-            'resource_export',
-            '/dataset/{package_id}/resource/{resource_id}/export/{file_format}.{extension}',
-            controller='ckanext.package_converter.controller:PackageExportController',
-            action='resource_export'
-        )
-        return map_
+    # # IRoutes
+    # def before_map(self, map_):
+    #     map_.connect(
+    #         'package_export',
+    #         '/dataset/{package_id}/export/{file_format}.{extension}',
+    #         controller='ckanext.package_converter.controller:PackageExportController',
+    #         action='package_export'
+    #     )
+    #     map_.connect(
+    #         'resource_export',
+    #         '/dataset/{package_id}/resource/{resource_id}/export/{file_format}.{extension}',
+    #         controller='ckanext.package_converter.controller:PackageExportController',
+    #         action='resource_export'
+    #     )
+    #     return map_
 
     # IActions
     def get_actions(self):
@@ -78,3 +82,7 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
             return json.dumps(converted_package, indent=4, ensure_ascii=False)
         else:
             return ''
+
+    # IBlueprint
+    def get_blueprint(self):
+        return controller.get_blueprints(self.name, self.__module__)
