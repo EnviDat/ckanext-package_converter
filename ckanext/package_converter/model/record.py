@@ -6,6 +6,7 @@ from xmltodict import unparse, parse
 import requests
 
 import json
+import six
 
 from logging import getLogger
 
@@ -68,12 +69,16 @@ class XMLRecord(Record):
         if custom_xsd:
             xsd_content = custom_xsd
         else:
+            xsd_url_str_orig = self.metadata_format.xsd_url
+            log.debug("Validating against {0}".format(xsd_url_str_orig))
+
             # encode xsd_url string if necessary
-            xsd_url_str = self.metadata_format.xsd_url
-            if isinstance(self.metadata_format.xsd_url, str):
+            xsd_url_str = xsd_url_str_orig
+            if isinstance(self.metadata_format.xsd_url, six.string_types):
                 xsd_url_str = self.metadata_format.xsd_url.encode(encoding)
+                log.debug("Encoded url {0}: '{1}'".format(encoding, xsd_url_str))
+
             # request XSD content
-            log.debug("Validating against " + xsd_url_str)
             res = requests.get(xsd_url_str)
             xsd_content = res.content
 
@@ -82,11 +87,12 @@ class XMLRecord(Record):
                 for replace_pair in custom_replace:
                     xsd_content = xsd_content.replace(replace_pair[0], replace_pair[1])
             else:
-                xsd_content = xsd_content.replace('schemaLocation="include/',
-                                                  'schemaLocation="' + xsd_url_str.rsplit("/", 1)[0]
-                                                  + '/include/').replace(
-                    'xs:include schemaLocation="..',
-                    'xs:include schemaLocation="' + xsd_url_str.rsplit("/", 2)[0])
+                xsd_content = xsd_content.replace(b'schemaLocation="include/',
+                                                  b'schemaLocation="'
+                                                  + xsd_url_str_orig.rsplit("/", 1)[0].encode(encoding)
+                                                  + b'/include/').replace(
+                    b'xs:include schemaLocation="..',
+                    b'xs:include schemaLocation="' + xsd_url_str_orig.rsplit("/", 2)[0].encode(encoding))
 
         doc_xsd = etree.XML(xsd_content)
         schema = etree.XMLSchema(doc_xsd)
