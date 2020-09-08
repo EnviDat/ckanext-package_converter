@@ -64,9 +64,9 @@ MetadataFormats().add_metadata_format(
                    description='Schema.org structured information for datasets based upon W3C DCAT work'))
 
 # Add Converters
-datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite_v.3.1_to_oai_dc_v2.0.xsl'
+datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite_v.4.3_to_oai_dc_v2.0.xsl'
 datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_dc_xsl_relative_path)
-Converters().add_converter(XSLConverter(MetadataFormats().get_metadata_formats('datacite', '3.1')[0],
+Converters().add_converter(XSLConverter(MetadataFormats().get_metadata_formats('datacite', '4.3')[0],
                                         MetadataFormats().get_metadata_formats('oai_dc')[0],
                                         datacite_oai_dc_xsl_path))
 

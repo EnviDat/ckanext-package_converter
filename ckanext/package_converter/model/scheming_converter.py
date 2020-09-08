@@ -461,7 +461,6 @@ class Datacite43SchemingConverter(SchemingConverter):
         datacite_size_tag = 'size'
         datacite_sizes = []
         for resource in dataset_dict.get('resources', []):
-            log.debug('** SIZE *** ' + resource.get('resource_size', ''))
             if resource.get('size', ''):
                 datacite_sizes += [{'#text': str(resource.get('size', ' ')) + ' bytes'}]
             elif resource.get('resource_size', ''):

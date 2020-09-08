@@ -105,7 +105,7 @@ class XMLRecord(Record):
             validation = schema.assertValid(xml_dom)
             log.debug(validation)
         except etree.DocumentInvalid as e:
-            log.warning('Document Invalid: {0}'.format(e.message))
+            log.warning('Document Invalid: {0}'.format(e))
         except:
             log.error('Exception: {0}'.format(sys.exc_info()[0]))
         return False
