@@ -14,10 +14,10 @@ MetadataFormats().add_metadata_format(
 MetadataFormats().add_metadata_format(
     MetadataFormat('ckan_resource', '', format_type=FormatType.JSON, description='CKAN base format for resources'))
 
-MetadataFormats().add_metadata_format(
-    XMLMetadataFormat('datacite', '3.1', 'http://schema.datacite.org/meta/kernel-3/metadata.xsd',
-                      namespace='http://datacite.org/schema/kernel-3',
-                      description='DataCite Metadata Format 3.1'))
+# MetadataFormats().add_metadata_format(
+#     XMLMetadataFormat('datacite', '3.1', 'http://schema.datacite.org/meta/kernel-3/metadata.xsd',
+#                       namespace='http://datacite.org/schema/kernel-3',
+#                       description='DataCite Metadata Format 3.1'))
 
 MetadataFormats().add_metadata_format(
     XMLMetadataFormat('datacite', '4.3', 'http://schema.datacite.org/meta/kernel-4.3/metadata.xsd',
@@ -72,6 +72,6 @@ Converters().add_converter(XSLConverter(MetadataFormats().get_metadata_formats('
 
 datacite_oai_dc_xsl_relative_path = '../public/package_converter_xsl/datacite-to-dcat-ap.xsl'
 datacite_oai_dc_xsl_path = os.path.join(os.path.dirname(__file__), datacite_oai_dc_xsl_relative_path)
-Converters().add_converter(XSLConverter(MetadataFormats().get_metadata_formats('datacite', '3.1')[0],
+Converters().add_converter(XSLConverter(MetadataFormats().get_metadata_formats('datacite', '4.3')[0],
                                         MetadataFormats().get_metadata_formats('dcat')[0],
                                         datacite_oai_dc_xsl_path))
