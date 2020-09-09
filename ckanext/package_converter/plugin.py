@@ -7,7 +7,7 @@ from ckanext.package_converter.model.converter import Converters
 
 from logging import getLogger
 
-import ckanext.package_converter.controller as controller
+import ckanext.package_converter.blueprints as blueprints
 
 log = getLogger(__name__)
 
@@ -85,4 +85,4 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
 
     # IBlueprint
     def get_blueprint(self):
-        return controller.get_blueprints(self.name, self.__module__)
+        return blueprints.get_blueprints(self.name, self.__module__)
