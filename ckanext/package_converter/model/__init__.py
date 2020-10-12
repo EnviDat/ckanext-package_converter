@@ -9,6 +9,11 @@ MetadataFormats().add_metadata_format(MetadataFormat('dcat', '20140116', format_
                                                      description='DCAT is an RDF vocabulary designed to facilitate interoperability ' +
                                                                  ' between data catalogs published on the Web ' +
                                                                  '(https://www.w3.org/TR/2014/REC-vocab-dcat-20140116)'))
+
+MetadataFormats().add_metadata_format(MetadataFormat('dcat-ap-ch', '1.0', format_type=FormatType.RDF,
+                                                     description='DCAT-AP-CH is an RDF Swiss data standard based on the international DCAT-AP standard ' +
+                                                                 '(https://handbook.opendata.swiss/content/glossar/bibliothek/dcat-ap-ch.html)'))
+
 MetadataFormats().add_metadata_format(
     MetadataFormat('ckan', '', format_type=FormatType.JSON, description='CKAN base format for package'))
 MetadataFormats().add_metadata_format(
