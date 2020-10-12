@@ -68,25 +68,31 @@ class DcatApChConverter(BaseConverter):
                                                                 id=dataset_dict.get('name', ''))
         md_metadata_dict['dcat:Dataset'] = {'@rdf:about': package_url}
 
-        # identifier
+        # identifier (MANDATORY)
         identifier = dataset_dict['id'] + '@envidat'
         md_metadata_dict['dcat:Dataset']['dct:identifier'] = identifier
 
-        # title
+        # title (MANDATORY)
         title = dataset_dict['title']
         md_metadata_dict['dcat:Dataset']['dct:title'] = {'@xml:lang': "en",
                                                          '#text': title}
-        # description
+        # description (MANDATORY)
         description = dataset_dict.get('notes', '').replace('\n', ' ').replace('\r', ' ').replace('__', '')
         md_metadata_dict['dcat:Dataset']['dct:description'] = { '@xml:lang': "en",
                                                                 '#text': description}
 
-        # publication
+        # issued
+        # <dct:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2013-04-26T01:00:00Z</dct:issued>
+
+        # modified
+        # <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2015-04-26T00:00:00Z</dct:modified>
+
+        # publication (MANDATORY)
         publisher_name = json.loads(dataset_dict.get('publication', '{}')).get('publisher', '')
         publisher = {'rdf:Description': {'rdfs:label': publisher_name}}
         md_metadata_dict['dcat:Dataset']['dct:publisher'] = publisher
 
-        # contact point
+        # contact point (MANDATORY)
         maintainer = json.loads(dataset_dict.get('maintainer', '{}'))
         maintainer_name = ""
         if maintainer.get('given_name'):
@@ -105,8 +111,95 @@ class DcatApChConverter(BaseConverter):
             md_metadata_dict['dcat:Dataset']['dcat:contactPoint'] = [individual_contact_point,
                                                                      organization_contact_point]
 
-        # theme
+        # theme (MANDATORY)
         md_metadata_dict['dcat:Dataset']['dcat:theme'] = {'@rdf:resource': "http://opendata.swiss/themes/education"}
+
+        # language
+        md_metadata_dict['dcat:Dataset']['dct:language'] = {'#text': 'en'}
+
+        # relation
+
+        # keyword
+        keywords_list = []
+        keywords = self.get_keywords(dataset_dict)
+        for keyword in keywords:
+            keywords_list += [{'@xml:lang': "en", '#text': keyword}]
+
+        md_metadata_dict['dcat:Dataset']['dcat:keyword'] = keywords
+
+        # landing page
+        md_metadata_dict['dcat:Dataset']['dcat:landingPage'] = package_url
+
+        # spatial
+        # <dct:spatial/>
+
+        # coverage
+        # <dct:coverage/>
+
+        # temporal
+        # <dct:temporal>
+
+        # accrualPeriodicity
+        # <dct:accrualPeriodicity rdf:resource="http://purl.org/cld/freq/daily"/>
+
+        # see also
+        # <rdfs:seeAlso>326@swisstopo</rdfs:seeAlso>
+
+        # distribution - resources (MANDATORY)
+        distribution_list = []
+
+        dataset_license = dataset_dict.get('license_id', 'odc-odbl')
+
+        license_mapping = {'wsl-data': 'NonCommercialWithPermission-CommercialWithPermission-ReferenceRequired',
+                           'odc-odbl': 'NonCommercialAllowed-CommercialAllowed-ReferenceRequired',
+                           'cc-by': 'NonCommercialAllowed-CommercialAllowed-ReferenceRequired',
+                           'cc-zero': 'NonCommercialAllowed-CommercialAllowed-ReferenceNotRequired',
+                           }
+        resource_license = license_mapping.get(dataset_license,
+                                               'NonCommercialWithPermission-CommercialWithPermission-ReferenceRequired')
+
+        for resource in dataset_dict.get('resources', []):
+            resource_id = resource.get('id')
+            resource_name = resource.get('name', resource_id)
+            resource_notes = resource.get('description', 'No description').replace('\n', ' ').replace('\r', ' ').replace('__', '')
+            resource_page_url = package_url + '/resource/' + resource.get('id', '')
+            resource_url = resource.get('url', toolkit.url_for(controller='resource', action='read',
+                                                               id=dataset_dict.get('id', ''),
+                                                               resource_id=resource.get('id', '')))
+
+            # >2013-05-11T00:00:00Z</dct:issued>
+            resource_creation = parse(resource['created']).strftime("%Y-%m-%dT%H:%M:%SZ")
+            resource_modification = resource_creation
+            if resource.get('last_modified', resource.get('metadata_modified', '')):
+                resource_modification = parse(resource.get('last_modified', resource.get('metadata_modified', '')))\
+                                        .strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            # check if restricted
+            if not helpers.is_url(resource_url):
+                log.debug('resource is restricted: ' + resource_name)
+                resource_url = resource_page_url
+
+            distribution_list += [{'dcat:Distribution': {'@rdf:about': resource_page_url,
+                                                         'dct:identifier': dataset_dict['name'] + '.' + resource_id,
+                                                         'dct:title': {'@xml:lang': "en", '#text': resource_name},
+                                                         'dct:description': {'@xml:lang': "en", '#text': resource_notes},
+                                                         'dct:issued': {'@rdf:datatype':"http://www.w3.org/2001/XMLSchema#dateTime",
+                                                                        '#text': resource_creation},
+                                                         'dct:modified': {'@rdf:datatype':"http://www.w3.org/2001/XMLSchema#dateTime",
+                                                                          '#text': resource_modification},
+                                                         'dct:language': 'en',
+                                                         'dcat:accessURL': {'@rdf:datatype': "http://www.w3.org/2001/XMLSchema#anyURI",
+                                                                            '#text': resource_url},
+                                                         # dcat:downloadURL
+                                                         'dct:rights': resource_license,
+                                                         'dcat:byteSize': "1024",
+                                                         # mediaType
+                                                         # format
+                                                         # coverage
+                                                         }
+                                   }]
+
+        md_metadata_dict['dcat:Dataset']['dcat:distribution'] = distribution_list
 
         # root element
         dcat_metadata_dict = collections.OrderedDict()
@@ -124,3 +217,10 @@ class DcatApChConverter(BaseConverter):
             extras_dict[extra.get('key')] = extra.get('value')
         return extras_dict
 
+    # extract keywords from tags
+    def get_keywords(self, data_dict):
+        keywords = []
+        for tag in data_dict.get('tags', []):
+            name = tag.get('display_name', '').upper()
+            keywords += [name]
+        return keywords
