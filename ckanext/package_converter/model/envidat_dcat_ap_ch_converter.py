@@ -77,7 +77,7 @@ class DcatApChConverter(BaseConverter):
         md_metadata_dict['dcat:Dataset']['dct:title'] = {'@xml:lang': "en",
                                                          '#text': title}
         # description (MANDATORY)
-        description = dataset_dict.get('notes', '').replace('\n', ' ').replace('\r', ' ').replace('__', '')
+        description = self.clean_markup(dataset_dict.get('notes', ''))
         md_metadata_dict['dcat:Dataset']['dct:description'] = { '@xml:lang': "en",
                                                                 '#text': description}
 
@@ -161,7 +161,7 @@ class DcatApChConverter(BaseConverter):
         for resource in dataset_dict.get('resources', []):
             resource_id = resource.get('id')
             resource_name = resource.get('name', resource_id)
-            resource_notes = resource.get('description', 'No description').replace('\n', ' ').replace('\r', ' ').replace('__', '')
+            resource_notes = self.clean_markup(resource.get('description', 'No description'))
             resource_page_url = package_url + '/resource/' + resource.get('id', '')
             resource_url = resource.get('url', toolkit.url_for(controller='resource', action='read',
                                                                id=dataset_dict.get('id', ''),
@@ -224,3 +224,8 @@ class DcatApChConverter(BaseConverter):
             name = tag.get('display_name', '').upper()
             keywords += [name]
         return keywords
+
+    # extract keywords from tags
+    def clean_markup(self, description):
+        text = description.replace('\r', '\n').replace('\n\n', '\n').replace('__', '')
+        return text
