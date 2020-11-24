@@ -227,5 +227,6 @@ class DcatApChConverter(BaseConverter):
 
     # extract keywords from tags
     def clean_markup(self, description):
-        text = description.replace('\r', '\n').replace('\n\n', '\n').replace('__', '')
+        text = description.replace('__', '').replace('#', '').replace('  ', ' ')
+        text = text.replace('\r', '\n').replace('\n\n', '\n')
         return text
