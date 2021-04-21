@@ -153,7 +153,9 @@ class DcatApChConverter(BaseConverter):
         license_mapping = {'wsl-data': 'NonCommercialWithPermission-CommercialWithPermission-ReferenceRequired',
                            'odc-odbl': 'NonCommercialAllowed-CommercialAllowed-ReferenceRequired',
                            'cc-by': 'NonCommercialAllowed-CommercialAllowed-ReferenceRequired',
+                           'cc-by-sa': 'NonCommercialAllowed-CommercialAllowed-ReferenceRequired',
                            'cc-zero': 'NonCommercialAllowed-CommercialAllowed-ReferenceNotRequired',
+                           'CC0-1.0': 'NonCommercialAllowed-CommercialAllowed-ReferenceNotRequired',
                            }
         resource_license = license_mapping.get(dataset_license,
                                                'NonCommercialWithPermission-CommercialWithPermission-ReferenceRequired')
