@@ -66,7 +66,7 @@ class Package_ConverterPlugin(plugins.SingletonPlugin):
 
     def package_converter_readme_link(self, package_dict):
         for resource in package_dict.get('resources', []):
-            if resource['name'] == 'README.txt':
+            if resource.get('name', "") == 'README.txt':
                 return resource.get('url', None)
         return None
 
