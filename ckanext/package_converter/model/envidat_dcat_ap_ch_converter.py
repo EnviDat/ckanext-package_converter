@@ -78,14 +78,23 @@ class DcatApChConverter(BaseConverter):
                                                          '#text': title}
         # description (MANDATORY)
         description = self.clean_markup(dataset_dict.get('notes', ''))
-        md_metadata_dict['dcat:Dataset']['dct:description'] = { '@xml:lang': "en",
-                                                                '#text': description}
+        md_metadata_dict['dcat:Dataset']['dct:description'] = {'@xml:lang': "en", '#text': description}
 
         # issued
-        # <dct:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2013-04-26T01:00:00Z</dct:issued>
+        creation_date = dataset_dict.get('metadata_created')
+        if creation_date:
+            md_metadata_dict['dcat:Dataset']['dct:issued'] = {
+                '@rdf:datatype': "http://www.w3.org/2001/XMLSchema#dateTime",
+                '#text': parse(creation_date).strftime("%Y-%m-%dT%H:%M:%SZ")
+            }
 
         # modified
-        # <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2015-04-26T00:00:00Z</dct:modified>
+        modification_date = dataset_dict.get('metadata_modified', creation_date)
+        if modification_date:
+            md_metadata_dict['dcat:Dataset']['dct:modified'] = {
+                '@rdf:datatype': "http://www.w3.org/2001/XMLSchema#dateTime",
+                '#text': parse(modification_date).strftime("%Y-%m-%dT%H:%M:%SZ")
+            }
 
         # publication (MANDATORY)
         publisher_name = json.loads(dataset_dict.get('publication', '{}')).get('publisher', '')
@@ -125,7 +134,7 @@ class DcatApChConverter(BaseConverter):
         for keyword in keywords:
             keywords_list += [{'@xml:lang': "en", '#text': keyword}]
 
-        md_metadata_dict['dcat:Dataset']['dcat:keyword'] = keywords
+        md_metadata_dict['dcat:Dataset']['dcat:keyword'] = keywords_list
 
         # landing page
         md_metadata_dict['dcat:Dataset']['dcat:landingPage'] = package_url
@@ -165,41 +174,69 @@ class DcatApChConverter(BaseConverter):
             resource_name = resource.get('name', resource_id)
             resource_notes = self.clean_markup(resource.get('description', 'No description'))
             resource_page_url = package_url + '/resource/' + resource.get('id', '')
-            resource_url = resource.get('url', toolkit.url_for(controller='resource', action='read',
-                                                               id=dataset_dict.get('id', ''),
-                                                               resource_id=resource.get('id', '')))
+            resource_url = protocol + '://' + host + toolkit.url_for(controller='resource', action='read',
+                                                                     id=dataset_dict.get('id', ''),
+                                                                     resource_id=resource.get('id', ''))
 
             # >2013-05-11T00:00:00Z</dct:issued>
             resource_creation = parse(resource['created']).strftime("%Y-%m-%dT%H:%M:%SZ")
             resource_modification = resource_creation
             if resource.get('last_modified', resource.get('metadata_modified', '')):
-                resource_modification = parse(resource.get('last_modified', resource.get('metadata_modified', '')))\
-                                        .strftime("%Y-%m-%dT%H:%M:%SZ")
+                resource_modification = parse(resource.get('last_modified', resource.get('metadata_modified', ''))) \
+                    .strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            # check if restricted
-            if not helpers.is_url(resource_url):
-                log.debug('resource is restricted: ' + resource_name)
-                resource_url = resource_page_url
+            resource_size = resource.get('size', False)
 
-            distribution_list += [{'dcat:Distribution': {'@rdf:about': resource_page_url,
-                                                         'dct:identifier': dataset_dict['name'] + '.' + resource_id,
-                                                         'dct:title': {'@xml:lang': "en", '#text': resource_name},
-                                                         'dct:description': {'@xml:lang': "en", '#text': resource_notes},
-                                                         'dct:issued': {'@rdf:datatype':"http://www.w3.org/2001/XMLSchema#dateTime",
-                                                                        '#text': resource_creation},
-                                                         'dct:modified': {'@rdf:datatype':"http://www.w3.org/2001/XMLSchema#dateTime",
-                                                                          '#text': resource_modification},
-                                                         'dct:language': 'en',
-                                                         'dcat:accessURL': {'@rdf:datatype': "http://www.w3.org/2001/XMLSchema#anyURI",
-                                                                            '#text': resource_url},
-                                                         # dcat:downloadURL
-                                                         'dct:rights': resource_license,
-                                                         'dcat:byteSize': "1024",
-                                                         # mediaType
-                                                         # format
-                                                         # coverage
-                                                         }
-                                   }]
+            if not resource_size:
+                resource_size = 0
+                try:
+                    if len(resource.get('resource_size', '')) > 0:
+                        resource_size_obj = json.loads(resource.get('resource_size', "{'size_value': '0'}"))
+                        sizes_dict = {'KB': 1024, 'MB': 1048576, 'GB': 1073741824, 'TB': 1099511627776}
+                        resource_size_str = resource_size_obj.get('size_value', '')
+                        if len(resource_size_str) > 0:
+                            resource_size = float(resource_size_obj.get('size_value', '0')) * sizes_dict[
+                                resource_size_obj.get('size_unit', 'KB').upper()]
+                except:
+                    log.error('resource {0} unparseable resource_size: {1}'.format(resource_url,
+                                                                                   resource.get('resource_size')))
+                    resource_size = 0
+
+            resource_mimetype = resource.get('mimetype', '')
+            if not resource_mimetype or len(resource_mimetype) == 0:
+                resource_mimetype = resource.get('mimetype_inner')
+
+            resource_format = resource.get('format')
+
+            distribution = {'dcat:Distribution':
+                                       {'@rdf:about': resource_page_url,
+                                        'dct:identifier': dataset_dict['name'] + '.' + resource_id,
+                                        'dct:title': {'@xml:lang': "en", '#text': resource_name},
+                                        'dct:description': {'@xml:lang': "en", '#text': resource_notes},
+                                        'dct:issued': {'@rdf:datatype': "http://www.w3.org/2001/XMLSchema#dateTime",
+                                                       '#text': resource_creation},
+                                        'dct:modified': {'@rdf:datatype': "http://www.w3.org/2001/XMLSchema#dateTime",
+                                                         '#text': resource_modification},
+                                        'dct:language': 'en',
+                                        'dcat:accessURL': {'@rdf:datatype': "http://www.w3.org/2001/XMLSchema#anyURI",
+                                                           '#text': resource_url},
+                                        'dcat:downloadURL': {'@rdf:datatype': "http://www.w3.org/2001/XMLSchema#anyURI",
+                                                             '#text': resource.get('url', resource_url)},
+                                        'dct:rights': resource_license,
+                                        'dcat:byteSize': resource_size
+                                       }
+                                   }
+            # mediaType
+            if resource_mimetype:
+                distribution['dcat:Distribution']['dcat:mediaType'] = resource_mimetype
+
+            # format
+            if resource_format:
+                distribution['dcat:Distribution']['dct:format'] = resource_format
+
+            # coverage
+
+            distribution_list += [distribution]
 
         md_metadata_dict['dcat:Dataset']['dcat:distribution'] = distribution_list
 
