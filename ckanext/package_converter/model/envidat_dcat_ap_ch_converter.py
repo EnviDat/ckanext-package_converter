@@ -196,7 +196,7 @@ class DcatApChConverter(BaseConverter):
                         resource_size_str = resource_size_obj.get('size_value', '')
                         if len(resource_size_str) > 0:
                             resource_size = float(resource_size_obj.get('size_value', '0')) * sizes_dict[
-                                resource_size_obj.get('size_unit', 'KB').upper()]
+                                resource_size_obj.get('size_units', 'KB').upper()]
                 except:
                     log.error('resource {0} unparseable resource_size: {1}'.format(resource_url,
                                                                                    resource.get('resource_size')))
