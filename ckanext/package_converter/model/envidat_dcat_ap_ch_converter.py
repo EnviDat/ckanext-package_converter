@@ -220,8 +220,8 @@ class DcatApChConverter(BaseConverter):
                                         'dct:language': 'en',
                                         'dcat:accessURL': {'@rdf:datatype': "http://www.w3.org/2001/XMLSchema#anyURI",
                                                            '#text': resource_url},
-                                        'dcat:downloadURL': {'@rdf:datatype': "http://www.w3.org/2001/XMLSchema#anyURI",
-                                                             '#text': resource.get('url', resource_url)},
+                                        # 'dcat:downloadURL': {'@rdf:datatype': "http://www.w3.org/2001/XMLSchema#anyURI",
+                                        #                      '#text': resource.get('url', resource_url)},
                                         'dct:rights': resource_license,
                                         'dcat:byteSize': resource_size
                                        }
