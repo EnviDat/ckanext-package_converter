@@ -61,7 +61,7 @@ def package_export(package_id, file_format='', extension='xml'):
     return make_response(converted_package, 200, headers)
 
 
-def resource_export(resource_id, file_format='', extension='xml'):
+def resource_export(resource_id, package_id='', file_format='', extension='xml'):
     """Return the given dataset as a converted file.
     """
 
