@@ -158,7 +158,7 @@ class SchemingConverter(BaseConverter):
 class Datacite43SchemingConverter(SchemingConverter):
 
     def __init__(self):
-        self.output_format = MetadataFormats().get_metadata_formats('datacite', '4.3')[0]
+        self.output_format = MetadataFormats().get_metadata_formats('datacite', '4.4')[0]
         SchemingConverter.__init__(self, self.output_format)
 
     def convert(self, record):
