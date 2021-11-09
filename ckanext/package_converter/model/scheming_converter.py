@@ -409,12 +409,12 @@ class Datacite43SchemingConverter(SchemingConverter):
                 '@' + datacite_resource_type_general_tag: datacite_resource_type_general}
 
         # Alternate Identifier (CKAN URL)
-        # ckan_package_url = config.get('ckan.site_url','') + toolkit.url_for(controller='dataset',
-        # action='read', id=dataset_dict.get('name', ''))
-        ckan_package_url = config.get('ckan.site_url', '') + '/dataset/' + dataset_dict.get('name',
-                                                                                            dataset_dict.get('id'))
+        ckan_package_url = config.get('ckan.site_url', '') + '/dataset/' + dataset_dict.get('name')
+        ckan_package_url_id = config.get('ckan.site_url', '') + '/dataset/' + dataset_dict.get('id')
+
         datacite_dict['resource']['alternateIdentifiers'] = {
-            'alternateIdentifier': [{'#text': ckan_package_url, '@alternateIdentifierType': 'URL'}]}
+            'alternateIdentifier': [{'#text': ckan_package_url, '@alternateIdentifierType': 'URL'},
+                                    {'#text': ckan_package_url_id, '@alternateIdentifierType': 'URL'}]}
         # legacy
         if dataset_dict.get('url', ''):
             datacite_dict['resource']['alternateIdentifiers']['alternateIdentifier'] += [
