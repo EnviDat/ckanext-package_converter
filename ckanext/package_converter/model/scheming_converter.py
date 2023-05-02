@@ -585,6 +585,9 @@ class Datacite43SchemingConverter(SchemingConverter):
             pkg_spatial = json.loads(dataset_dict['spatial'])
             log.debug("pkg_spatial=" + str(pkg_spatial))
             if pkg_spatial:
+                # Handle GeometryCollection
+                if pkg_spatial.get('type', '').lower() == 'geometrycollection':
+                    pkg_spatial = pkg_spatial.get('geometries')[0]
                 coordinates_list = self._flatten_list(pkg_spatial.get('coordinates', '[]'), reverse=True)
                 if pkg_spatial.get('type', '').lower() == 'polygon':
                     datacite_geolocation = collections.OrderedDict()
