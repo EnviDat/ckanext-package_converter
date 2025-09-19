@@ -1,41 +1,15 @@
-.. You should enable this project on travis-ci.org and coveralls.io to make
-   these badges work. The necessary Travis and Coverage config files have been
-   generated for you.
+DEPRECATED
+==========
 
-.. image:: https://travis-ci.org/espona/ckanext-package_converter.svg?branch=master
-    :target: https://travis-ci.org/espona/ckanext-package_converter
+This extension has been replaced by the
+`envidat-converters-api <https://gitlabext.wsl.ch/EnviDat/envidat-converters-api>`_
+microservice.
 
-.. image:: https://coveralls.io/repos/github/espona/ckanext-package_converter/badge.svg?branch=master
-    :target: https://coveralls.io/github/espona/ckanext-package_converter?branch=master
-
-.. image:: https://pypip.in/download/ckanext-package_converter/badge.svg
-    :target: https://pypi.python.org/pypi//ckanext-package_converter/
-    :alt: Downloads
-
-.. image:: https://pypip.in/version/ckanext-package_converter/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-package_converter/
-    :alt: Latest Version
-
-.. image:: https://pypip.in/py_versions/ckanext-package_converter/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-package_converter/
-    :alt: Supported Python versions
-
-.. image:: https://pypip.in/status/ckanext-package_converter/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-package_converter/
-    :alt: Development Status
-
-.. image:: https://pypip.in/license/ckanext-package_converter/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-package_converter/
-    :alt: License
-
-=============
 ckanext-package_converter
-=============
-
-.. Put a description of your extension here:
+-------------------------
 This extension allows the export (and soon import) of CKAN package metadata to multiple formats.
 It allows the user to easily define custom converters and reuse existing ones.
-Formats supported: DataCite, OAI_DC,...
+Formats supported: DataCite, OAI_DC.
 
 ------------
 Requirements
